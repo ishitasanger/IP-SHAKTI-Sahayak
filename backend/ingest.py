@@ -5,7 +5,7 @@ import json
 from rag.ingestion.loader import load_file
 from rag.ingestion.cleaner import clean_documents
 from rag.ingestion.chunker import create_chunks
-from rag.ingestion.metadata import (
+from rag.retrieval.metadata import (
     infer_domain,
     infer_source_type
 )
@@ -403,9 +403,8 @@ def main():
 
         ids = results.get("ids", [])
         texts = results.get(
-            "documents",
-            []
-        )
+            "documents"
+        ) or []
         metadatas = results.get(
             "metadatas",
             []
@@ -413,11 +412,11 @@ def main():
 
         for i in range(len(ids)):
 
-            metadata = metadatas[i]
+            metadata = (metadatas[i] if metadatas and i < len(metadatas) else {}) or {}
 
             all_chunks.append({
                 "id": ids[i],
-                "text": texts[i],
+                "text": texts[i] if texts[i] is not None else "",
                 "metadata": metadata
             })
 

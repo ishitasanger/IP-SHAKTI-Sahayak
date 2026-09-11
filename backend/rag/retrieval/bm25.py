@@ -2,7 +2,7 @@ import pickle
 import re
 from rank_bm25 import BM25Okapi
 
-from rag.query.query_processor import expand_legal_query
+from ..query.query_processor import expand_legal_query
 
 
 class BM25Index:
