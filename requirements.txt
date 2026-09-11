@@ -1,0 +1,8 @@
+pymupdf
+beautifulsoup4
+requests
+chromadb
+sentence-transformers
+rank-bm25
+pydantic
+numpy
