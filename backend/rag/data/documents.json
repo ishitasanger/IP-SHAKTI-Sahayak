@@ -124,5 +124,86 @@
         "source_type": "rules",
         "source_url": null,
         "chunks": 349
+    },
+    "ip/Regulatory/Drugs and Cosmetics Act, 1940 + Rules, 1945.pdf": {
+        "source_key": "ip/Regulatory/Drugs and Cosmetics Act, 1940 + Rules, 1945.pdf",
+        "source_file": "ip/Regulatory/Drugs and Cosmetics Act, 1940 + Rules, 1945.pdf",
+        "file_hash": "62bc0d8fd5f9d0c6be90b2fb86f67f8ed5280ac719a038fbf9f26fc8aa5036bf",
+        "domain": "ip",
+        "source_type": "document",
+        "source_url": null,
+        "chunks": 1864
+    },
+    "ip/Regulatory/Food Safety and Standards (Ayurveda Aahara) Regulations, 2022.pdf": {
+        "source_key": "ip/Regulatory/Food Safety and Standards (Ayurveda Aahara) Regulations, 2022.pdf",
+        "source_file": "ip/Regulatory/Food Safety and Standards (Ayurveda Aahara) Regulations, 2022.pdf",
+        "file_hash": "4af5224f4a0e8e506919ea1659d5066e6fc0bc3372859ca4eda60442f3be0e6a",
+        "domain": "ip",
+        "source_type": "document",
+        "source_url": null,
+        "chunks": 156
+    },
+    "ip/Regulatory/Licensing_Regulations.pdf": {
+        "source_key": "ip/Regulatory/Licensing_Regulations.pdf",
+        "source_file": "ip/Regulatory/Licensing_Regulations.pdf",
+        "file_hash": "d8d11c6b79f9f0453b43f86b833b0dd9240adeeea7e3a4b22114b47e2d116612",
+        "domain": "ip",
+        "source_type": "document",
+        "source_url": null,
+        "chunks": 192
+    },
+    "Regulatory/Drugs and Cosmetics Act, 1940 + Rules, 1945.pdf": {
+        "source_key": "Regulatory/Drugs and Cosmetics Act, 1940 + Rules, 1945.pdf",
+        "source_file": "Regulatory/Drugs and Cosmetics Act, 1940 + Rules, 1945.pdf",
+        "file_hash": "62bc0d8fd5f9d0c6be90b2fb86f67f8ed5280ac719a038fbf9f26fc8aa5036bf",
+        "domain": "regulatory",
+        "source_type": "document",
+        "source_url": null,
+        "chunks": 1864
+    },
+    "Regulatory/Food Safety and Standards (Ayurveda Aahara) Regulations, 2022.pdf": {
+        "source_key": "Regulatory/Food Safety and Standards (Ayurveda Aahara) Regulations, 2022.pdf",
+        "source_file": "Regulatory/Food Safety and Standards (Ayurveda Aahara) Regulations, 2022.pdf",
+        "file_hash": "4af5224f4a0e8e506919ea1659d5066e6fc0bc3372859ca4eda60442f3be0e6a",
+        "domain": "regulatory",
+        "source_type": "document",
+        "source_url": null,
+        "chunks": 156
+    },
+    "Regulatory/Licensing_Regulations.pdf": {
+        "source_key": "Regulatory/Licensing_Regulations.pdf",
+        "source_file": "Regulatory/Licensing_Regulations.pdf",
+        "file_hash": "d8d11c6b79f9f0453b43f86b833b0dd9240adeeea7e3a4b22114b47e2d116612",
+        "domain": "regulatory",
+        "source_type": "document",
+        "source_url": null,
+        "chunks": 192
+    },
+    "ABS/Biodiversity_Act_2002.pdf": {
+        "source_key": "ABS/Biodiversity_Act_2002.pdf",
+        "source_file": "ABS/Biodiversity_Act_2002.pdf",
+        "file_hash": "68495ccfd96a961b55e322e439fb9c5115b36d77f88af4c639fcf2758b37e22e",
+        "domain": "abs",
+        "source_type": "document",
+        "source_url": null,
+        "chunks": 61
+    },
+    "ABS/Guidelies-on-Access-to-Biological-Resources-2014.pdf": {
+        "source_key": "ABS/Guidelies-on-Access-to-Biological-Resources-2014.pdf",
+        "source_file": "ABS/Guidelies-on-Access-to-Biological-Resources-2014.pdf",
+        "file_hash": "f973db95c8ab536766c10154304d275b2938779a72a635830d4a6654943a6a92",
+        "domain": "abs",
+        "source_type": "document",
+        "source_url": null,
+        "chunks": 33
+    },
+    "ABS/The-Biological-Diversity-Rules-2004.pdf": {
+        "source_key": "ABS/The-Biological-Diversity-Rules-2004.pdf",
+        "source_file": "ABS/The-Biological-Diversity-Rules-2004.pdf",
+        "file_hash": "8ef325913e598b1906baf2f5a0150014e7176edd38f571915164c94f1407d6ec",
+        "domain": "abs",
+        "source_type": "document",
+        "source_url": null,
+        "chunks": 48
     }
 }
