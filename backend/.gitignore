@@ -1,9 +1,9 @@
-# Virtual environment
+# Python virtual environment
 venv/
 .venv/
 env/
 
-# Environment variables / API keys
+# Environment variables
 .env
 
 # Python cache
@@ -12,3 +12,6 @@ __pycache__/
 
 # VS Code
 .vscode/
+
+# ChromaDB generated database
+rag/data/chroma_db/
