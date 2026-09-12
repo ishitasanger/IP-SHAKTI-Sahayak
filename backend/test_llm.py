@@ -1,26 +1,84 @@
-from LLM.llm import GroqLLM
+from chatbot import IPShaktiChatbot
 
 
 def main():
-    llm = GroqLLM()
 
-    prompt = """
-You are an AI assistant for an Ayurveda regulatory guidance system.
+    chatbot = IPShaktiChatbot()
 
-Explain in 3-4 sentences:
-What is the purpose of regulatory compliance for an Ayurvedic product?
-"""
+    product_context = {
+        "product_name": "Ashwagandha Herbal Formulation",
+        "product_type": "ayurvedic medicine",
+        "classification": "proprietary formulation",
+        "ingredients": ["Ashwagandha", "Brahmi"],
+        "intended_use": "General wellness and stress support",
+        "traditional_knowledge": "yes",
+        "uses_biological_resources": "yes",
+        "biological_resources": ["Ashwagandha", "Brahmi"],
+        "jurisdiction": "India"
+    }
 
-    response = llm.generate(prompt)
+    legal_report = {
+        "ip_assessment": {
+            "relevant_ip_domains": [
+                "patent",
+                "trademark",
+                "traditional knowledge",
+                "biological resources"
+            ]
+        },
+        "regulatory_assessment": {
+            "overall_status": "Review"
+        },
+        "tkdl_assessment": {
+            "overall_status": "TKDL review required"
+        },
+        "abs_assessment": {
+            "overall_status": "ABS review required"
+        }
+    }
 
-    print("\n" + "=" * 80)
-    print("GROQ LLM TEST")
-    print("=" * 80)
+    roadmap = {
+        "status": "Action plan generated",
+        "actions": [
+            {
+                "action": "Patent filing",
+                "action_type": "patent_filing"
+            },
+            {
+                "action": "ABS compliance",
+                "action_type": "abs_compliance"
+            }
+        ]
+    }
 
-    print("\nResponse:")
-    print(response)
+    chat_history = []
 
-    print("\n" + "=" * 80)
+    question = "Why is ABS compliance relevant to my product?"
+
+    print("\n" + "=" * 70)
+    print("USER QUESTION")
+    print("=" * 70)
+    print(question)
+
+    result = chatbot.answer(
+        question=question,
+        product_context=product_context,
+        legal_report=legal_report,
+        roadmap=roadmap,
+        chat_history=chat_history
+    )
+
+    print("\n" + "=" * 70)
+    print("CHATBOT ANSWER")
+    print("=" * 70)
+    print(result["answer"])
+
+    print("\n" + "=" * 70)
+    print("SOURCES")
+    print("=" * 70)
+
+    for source in result["sources"]:
+        print(source)
 
 
 if __name__ == "__main__":

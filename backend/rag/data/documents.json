@@ -1,190 +1,11 @@
 {
-    "ip/acts/The Copyright Act, 1957.pdf": {
-        "source_key": "ip/acts/The Copyright Act, 1957.pdf",
-        "source_file": "ip/acts/The Copyright Act, 1957.pdf",
-        "file_hash": "8c70b510270272bde44cc0a48809a4af2ff282d26b5da627b57e49d7a3738e54",
-        "domain": "ip",
-        "source_type": "statute",
-        "source_url": null,
-        "chunks": 172
-    },
-    "ip/acts/The Designs Act, 2000.pdf": {
-        "source_key": "ip/acts/The Designs Act, 2000.pdf",
-        "source_file": "ip/acts/The Designs Act, 2000.pdf",
-        "file_hash": "e392e657bba992c763a4442d5cfe2d3ca089682590ae5bfa35a35c0381adc79f",
-        "domain": "ip",
-        "source_type": "statute",
-        "source_url": null,
-        "chunks": 56
-    },
-    "ip/acts/The GI Act, 1999.pdf": {
-        "source_key": "ip/acts/The GI Act, 1999.pdf",
-        "source_file": "ip/acts/The GI Act, 1999.pdf",
-        "file_hash": "049515caf90026ce4d4ce34bed2059d2502326f8795f9c1da2afa60fcaff12fc",
-        "domain": "ip",
-        "source_type": "statute",
-        "source_url": null,
-        "chunks": 106
-    },
-    "ip/acts/The Patents Act, 1970.pdf": {
-        "source_key": "ip/acts/The Patents Act, 1970.pdf",
-        "source_file": "ip/acts/The Patents Act, 1970.pdf",
-        "file_hash": "d57084888c69d70b16ed6a52a612363a526994203effa58880a26faaaa6e0678",
-        "domain": "ip",
-        "source_type": "statute",
-        "source_url": null,
-        "chunks": 267
-    },
-    "ip/acts/The Trademarks Act, 1999.pdf": {
-        "source_key": "ip/acts/The Trademarks Act, 1999.pdf",
-        "source_file": "ip/acts/The Trademarks Act, 1999.pdf",
-        "file_hash": "07aa58f3262a4d764c087577b2d49c7de0f4f49a392818aa9bc38c0dba620f1f",
-        "domain": "ip",
-        "source_type": "statute",
-        "source_url": null,
-        "chunks": 192
-    },
-    "ip/guidelines/Patent Ayush Guidelines.pdf": {
-        "source_key": "ip/guidelines/Patent Ayush Guidelines.pdf",
-        "source_file": "ip/guidelines/Patent Ayush Guidelines.pdf",
-        "file_hash": "2bab3cef1b08c07155976c089e05fc4f3f77009d4172423b145fc49da70ca082",
-        "domain": "ip",
-        "source_type": "guideline",
-        "source_url": null,
-        "chunks": 43
-    },
-    "ip/rules/GI Amendment Rules 2020.pdf": {
-        "source_key": "ip/rules/GI Amendment Rules 2020.pdf",
-        "source_file": "ip/rules/GI Amendment Rules 2020.pdf",
-        "file_hash": "b7918cf2110899cb5ff1612c08bdb39d37b0d45babbfc2aac9c66a63c3a30d15",
-        "domain": "ip",
-        "source_type": "rules",
-        "source_url": null,
-        "chunks": 15
-    },
-    "ip/rules/GI Amendment Rules 2025.pdf": {
-        "source_key": "ip/rules/GI Amendment Rules 2025.pdf",
-        "source_file": "ip/rules/GI Amendment Rules 2025.pdf",
-        "file_hash": "2ae4225d806162e3a4303d02e9187f55e11af3a579813319e398fc1009a0889e",
-        "domain": "ip",
-        "source_type": "rules",
-        "source_url": null,
-        "chunks": 20
-    },
-    "ip/rules/GI Rules 2002.pdf": {
-        "source_key": "ip/rules/GI Rules 2002.pdf",
-        "source_file": "ip/rules/GI Rules 2002.pdf",
-        "file_hash": "61f79666a010ec619de7b1317607143ef570505ba36210d5f87b3236d9fe3450",
-        "domain": "ip",
-        "source_type": "rules",
-        "source_url": null,
-        "chunks": 200
-    },
-    "ip/rules/The Copyright Rules, 2013.pdf": {
-        "source_key": "ip/rules/The Copyright Rules, 2013.pdf",
-        "source_file": "ip/rules/The Copyright Rules, 2013.pdf",
-        "file_hash": "ffd844f0ba5ab18fafa347f6bc46b04e1394623c9b8a29d4dde90339eb655c5b",
-        "domain": "ip",
-        "source_type": "rules",
-        "source_url": null,
-        "chunks": 177
-    },
-    "ip/rules/The Design Rules Amendment, 2021.pdf": {
-        "source_key": "ip/rules/The Design Rules Amendment, 2021.pdf",
-        "source_file": "ip/rules/The Design Rules Amendment, 2021.pdf",
-        "file_hash": "c631927da0eb552bbbb9f8b1a20259f6f7a06e032470015969fc29777314715a",
-        "domain": "ip",
-        "source_type": "rules",
-        "source_url": null,
-        "chunks": 31
-    },
-    "ip/rules/The Design Rules, 2001.pdf": {
-        "source_key": "ip/rules/The Design Rules, 2001.pdf",
-        "source_file": "ip/rules/The Design Rules, 2001.pdf",
-        "file_hash": "1996dcbbd47708bf7ea17ca9d438955d02d38ae3e880b92c07f7417552041d2d",
-        "domain": "ip",
-        "source_type": "rules",
-        "source_url": null,
-        "chunks": 74
-    },
-    "ip/rules/The Patent Rules, 2003.pdf": {
-        "source_key": "ip/rules/The Patent Rules, 2003.pdf",
-        "source_file": "ip/rules/The Patent Rules, 2003.pdf",
-        "file_hash": "42ffa9be3ea6b1b1f7031ceb9456fb60569b3f7ae6cde7ae3136a07f04ffeb3b",
-        "domain": "ip",
-        "source_type": "rules",
-        "source_url": null,
-        "chunks": 226
-    },
-    "ip/rules/The Trademark Rules 2017.pdf": {
-        "source_key": "ip/rules/The Trademark Rules 2017.pdf",
-        "source_file": "ip/rules/The Trademark Rules 2017.pdf",
-        "file_hash": "b858aa6874a4373be03b1ee3a7a926f9f7b79dc7a15dbffdc2109cf6c3a33e92",
-        "domain": "ip",
-        "source_type": "rules",
-        "source_url": null,
-        "chunks": 349
-    },
-    "ip/Regulatory/Drugs and Cosmetics Act, 1940 + Rules, 1945.pdf": {
-        "source_key": "ip/Regulatory/Drugs and Cosmetics Act, 1940 + Rules, 1945.pdf",
-        "source_file": "ip/Regulatory/Drugs and Cosmetics Act, 1940 + Rules, 1945.pdf",
-        "file_hash": "62bc0d8fd5f9d0c6be90b2fb86f67f8ed5280ac719a038fbf9f26fc8aa5036bf",
-        "domain": "ip",
-        "source_type": "document",
-        "source_url": null,
-        "chunks": 1864
-    },
-    "ip/Regulatory/Food Safety and Standards (Ayurveda Aahara) Regulations, 2022.pdf": {
-        "source_key": "ip/Regulatory/Food Safety and Standards (Ayurveda Aahara) Regulations, 2022.pdf",
-        "source_file": "ip/Regulatory/Food Safety and Standards (Ayurveda Aahara) Regulations, 2022.pdf",
-        "file_hash": "4af5224f4a0e8e506919ea1659d5066e6fc0bc3372859ca4eda60442f3be0e6a",
-        "domain": "ip",
-        "source_type": "document",
-        "source_url": null,
-        "chunks": 156
-    },
-    "ip/Regulatory/Licensing_Regulations.pdf": {
-        "source_key": "ip/Regulatory/Licensing_Regulations.pdf",
-        "source_file": "ip/Regulatory/Licensing_Regulations.pdf",
-        "file_hash": "d8d11c6b79f9f0453b43f86b833b0dd9240adeeea7e3a4b22114b47e2d116612",
-        "domain": "ip",
-        "source_type": "document",
-        "source_url": null,
-        "chunks": 192
-    },
-    "Regulatory/Drugs and Cosmetics Act, 1940 + Rules, 1945.pdf": {
-        "source_key": "Regulatory/Drugs and Cosmetics Act, 1940 + Rules, 1945.pdf",
-        "source_file": "Regulatory/Drugs and Cosmetics Act, 1940 + Rules, 1945.pdf",
-        "file_hash": "62bc0d8fd5f9d0c6be90b2fb86f67f8ed5280ac719a038fbf9f26fc8aa5036bf",
-        "domain": "regulatory",
-        "source_type": "document",
-        "source_url": null,
-        "chunks": 1864
-    },
-    "Regulatory/Food Safety and Standards (Ayurveda Aahara) Regulations, 2022.pdf": {
-        "source_key": "Regulatory/Food Safety and Standards (Ayurveda Aahara) Regulations, 2022.pdf",
-        "source_file": "Regulatory/Food Safety and Standards (Ayurveda Aahara) Regulations, 2022.pdf",
-        "file_hash": "4af5224f4a0e8e506919ea1659d5066e6fc0bc3372859ca4eda60442f3be0e6a",
-        "domain": "regulatory",
-        "source_type": "document",
-        "source_url": null,
-        "chunks": 156
-    },
-    "Regulatory/Licensing_Regulations.pdf": {
-        "source_key": "Regulatory/Licensing_Regulations.pdf",
-        "source_file": "Regulatory/Licensing_Regulations.pdf",
-        "file_hash": "d8d11c6b79f9f0453b43f86b833b0dd9240adeeea7e3a4b22114b47e2d116612",
-        "domain": "regulatory",
-        "source_type": "document",
-        "source_url": null,
-        "chunks": 192
-    },
     "ABS/Biodiversity_Act_2002.pdf": {
         "source_key": "ABS/Biodiversity_Act_2002.pdf",
         "source_file": "ABS/Biodiversity_Act_2002.pdf",
         "file_hash": "68495ccfd96a961b55e322e439fb9c5115b36d77f88af4c639fcf2758b37e22e",
         "domain": "abs",
         "source_type": "document",
+        "action_type": "general",
         "source_url": null,
         "chunks": 61
     },
@@ -194,6 +15,7 @@
         "file_hash": "f973db95c8ab536766c10154304d275b2938779a72a635830d4a6654943a6a92",
         "domain": "abs",
         "source_type": "document",
+        "action_type": "general",
         "source_url": null,
         "chunks": 33
     },
@@ -203,7 +25,268 @@
         "file_hash": "8ef325913e598b1906baf2f5a0150014e7176edd38f571915164c94f1407d6ec",
         "domain": "abs",
         "source_type": "document",
+        "action_type": "general",
         "source_url": null,
         "chunks": 48
+    },
+    "ip/acts/The Copyright Act, 1957.pdf": {
+        "source_key": "ip/acts/The Copyright Act, 1957.pdf",
+        "source_file": "ip/acts/The Copyright Act, 1957.pdf",
+        "file_hash": "8c70b510270272bde44cc0a48809a4af2ff282d26b5da627b57e49d7a3738e54",
+        "domain": "ip",
+        "source_type": "statute",
+        "action_type": "general",
+        "source_url": null,
+        "chunks": 172
+    },
+    "ip/acts/The Designs Act, 2000.pdf": {
+        "source_key": "ip/acts/The Designs Act, 2000.pdf",
+        "source_file": "ip/acts/The Designs Act, 2000.pdf",
+        "file_hash": "e392e657bba992c763a4442d5cfe2d3ca089682590ae5bfa35a35c0381adc79f",
+        "domain": "ip",
+        "source_type": "statute",
+        "action_type": "general",
+        "source_url": null,
+        "chunks": 56
+    },
+    "ip/acts/The GI Act, 1999.pdf": {
+        "source_key": "ip/acts/The GI Act, 1999.pdf",
+        "source_file": "ip/acts/The GI Act, 1999.pdf",
+        "file_hash": "049515caf90026ce4d4ce34bed2059d2502326f8795f9c1da2afa60fcaff12fc",
+        "domain": "ip",
+        "source_type": "statute",
+        "action_type": "general",
+        "source_url": null,
+        "chunks": 106
+    },
+    "ip/acts/The Patents Act, 1970.pdf": {
+        "source_key": "ip/acts/The Patents Act, 1970.pdf",
+        "source_file": "ip/acts/The Patents Act, 1970.pdf",
+        "file_hash": "d57084888c69d70b16ed6a52a612363a526994203effa58880a26faaaa6e0678",
+        "domain": "ip",
+        "source_type": "statute",
+        "action_type": "general",
+        "source_url": null,
+        "chunks": 267
+    },
+    "ip/acts/The Trademarks Act, 1999.pdf": {
+        "source_key": "ip/acts/The Trademarks Act, 1999.pdf",
+        "source_file": "ip/acts/The Trademarks Act, 1999.pdf",
+        "file_hash": "07aa58f3262a4d764c087577b2d49c7de0f4f49a392818aa9bc38c0dba620f1f",
+        "domain": "ip",
+        "source_type": "statute",
+        "action_type": "general",
+        "source_url": null,
+        "chunks": 192
+    },
+    "ip/guidelines/Patent Ayush Guidelines.pdf": {
+        "source_key": "ip/guidelines/Patent Ayush Guidelines.pdf",
+        "source_file": "ip/guidelines/Patent Ayush Guidelines.pdf",
+        "file_hash": "2bab3cef1b08c07155976c089e05fc4f3f77009d4172423b145fc49da70ca082",
+        "domain": "ip",
+        "source_type": "guideline",
+        "action_type": "general",
+        "source_url": null,
+        "chunks": 43
+    },
+    "ip/next_actions/Patent_first_schedule.pdf": {
+        "source_key": "ip/next_actions/Patent_first_schedule.pdf",
+        "source_file": "ip/next_actions/Patent_first_schedule.pdf",
+        "file_hash": "70ce84a42fae1b6bd25c95256541f849ddff2fa8edce55765bbf551408ae0a62",
+        "domain": "ip",
+        "source_type": "procedure",
+        "action_type": "patent_filing",
+        "source_url": null,
+        "chunks": 15
+    },
+    "ip/rules/GI Amendment Rules 2020.pdf": {
+        "source_key": "ip/rules/GI Amendment Rules 2020.pdf",
+        "source_file": "ip/rules/GI Amendment Rules 2020.pdf",
+        "file_hash": "b7918cf2110899cb5ff1612c08bdb39d37b0d45babbfc2aac9c66a63c3a30d15",
+        "domain": "ip",
+        "source_type": "rules",
+        "action_type": "general",
+        "source_url": null,
+        "chunks": 15
+    },
+    "ip/rules/GI Amendment Rules 2025.pdf": {
+        "source_key": "ip/rules/GI Amendment Rules 2025.pdf",
+        "source_file": "ip/rules/GI Amendment Rules 2025.pdf",
+        "file_hash": "2ae4225d806162e3a4303d02e9187f55e11af3a579813319e398fc1009a0889e",
+        "domain": "ip",
+        "source_type": "rules",
+        "action_type": "general",
+        "source_url": null,
+        "chunks": 20
+    },
+    "ip/rules/GI Rules 2002.pdf": {
+        "source_key": "ip/rules/GI Rules 2002.pdf",
+        "source_file": "ip/rules/GI Rules 2002.pdf",
+        "file_hash": "61f79666a010ec619de7b1317607143ef570505ba36210d5f87b3236d9fe3450",
+        "domain": "ip",
+        "source_type": "rules",
+        "action_type": "general",
+        "source_url": null,
+        "chunks": 200
+    },
+    "ip/rules/The Copyright Rules, 2013.pdf": {
+        "source_key": "ip/rules/The Copyright Rules, 2013.pdf",
+        "source_file": "ip/rules/The Copyright Rules, 2013.pdf",
+        "file_hash": "ffd844f0ba5ab18fafa347f6bc46b04e1394623c9b8a29d4dde90339eb655c5b",
+        "domain": "ip",
+        "source_type": "rules",
+        "action_type": "general",
+        "source_url": null,
+        "chunks": 177
+    },
+    "ip/rules/The Design Rules Amendment, 2021.pdf": {
+        "source_key": "ip/rules/The Design Rules Amendment, 2021.pdf",
+        "source_file": "ip/rules/The Design Rules Amendment, 2021.pdf",
+        "file_hash": "c631927da0eb552bbbb9f8b1a20259f6f7a06e032470015969fc29777314715a",
+        "domain": "ip",
+        "source_type": "rules",
+        "action_type": "general",
+        "source_url": null,
+        "chunks": 31
+    },
+    "ip/rules/The Design Rules, 2001.pdf": {
+        "source_key": "ip/rules/The Design Rules, 2001.pdf",
+        "source_file": "ip/rules/The Design Rules, 2001.pdf",
+        "file_hash": "1996dcbbd47708bf7ea17ca9d438955d02d38ae3e880b92c07f7417552041d2d",
+        "domain": "ip",
+        "source_type": "rules",
+        "action_type": "general",
+        "source_url": null,
+        "chunks": 74
+    },
+    "ip/rules/The Patent Rules, 2003.pdf": {
+        "source_key": "ip/rules/The Patent Rules, 2003.pdf",
+        "source_file": "ip/rules/The Patent Rules, 2003.pdf",
+        "file_hash": "42ffa9be3ea6b1b1f7031ceb9456fb60569b3f7ae6cde7ae3136a07f04ffeb3b",
+        "domain": "ip",
+        "source_type": "rules",
+        "action_type": "general",
+        "source_url": null,
+        "chunks": 226
+    },
+    "ip/rules/The Trademark Rules 2017.pdf": {
+        "source_key": "ip/rules/The Trademark Rules 2017.pdf",
+        "source_file": "ip/rules/The Trademark Rules 2017.pdf",
+        "file_hash": "b858aa6874a4373be03b1ee3a7a926f9f7b79dc7a15dbffdc2109cf6c3a33e92",
+        "domain": "ip",
+        "source_type": "rules",
+        "action_type": "general",
+        "source_url": null,
+        "chunks": 349
+    },
+    "regulatory/Drugs and Cosmetics Act, 1940 + Rules, 1945.pdf": {
+        "source_key": "regulatory/Drugs and Cosmetics Act, 1940 + Rules, 1945.pdf",
+        "source_file": "regulatory/Drugs and Cosmetics Act, 1940 + Rules, 1945.pdf",
+        "file_hash": "62bc0d8fd5f9d0c6be90b2fb86f67f8ed5280ac719a038fbf9f26fc8aa5036bf",
+        "domain": "regulatory",
+        "source_type": "document",
+        "action_type": "general",
+        "source_url": null,
+        "chunks": 1864
+    },
+    "regulatory/Food Safety and Standards (Ayurveda Aahara) Regulations, 2022.pdf": {
+        "source_key": "regulatory/Food Safety and Standards (Ayurveda Aahara) Regulations, 2022.pdf",
+        "source_file": "regulatory/Food Safety and Standards (Ayurveda Aahara) Regulations, 2022.pdf",
+        "file_hash": "4af5224f4a0e8e506919ea1659d5066e6fc0bc3372859ca4eda60442f3be0e6a",
+        "domain": "regulatory",
+        "source_type": "document",
+        "action_type": "general",
+        "source_url": null,
+        "chunks": 156
+    },
+    "regulatory/Licensing_Regulations.pdf": {
+        "source_key": "regulatory/Licensing_Regulations.pdf",
+        "source_file": "regulatory/Licensing_Regulations.pdf",
+        "file_hash": "d8d11c6b79f9f0453b43f86b833b0dd9240adeeea7e3a4b22114b47e2d116612",
+        "domain": "regulatory",
+        "source_type": "document",
+        "action_type": "general",
+        "source_url": null,
+        "chunks": 192
+    },
+    "ip/next_actions/Patent_Filing_process.pdf": {
+        "source_key": "ip/next_actions/Patent_Filing_process.pdf",
+        "source_file": "ip/next_actions/Patent_Filing_process.pdf",
+        "file_hash": "f3eba755654179dc86ace5e48a835b5a35b27a78d077f506b1d95cb59ee9bbe6",
+        "domain": "ip",
+        "source_type": "procedure",
+        "action_type": "patent_filing",
+        "source_url": null,
+        "chunks": 5
+    },
+    "ip/next_actions/trademark_official_fee.pdf": {
+        "source_key": "ip/next_actions/trademark_official_fee.pdf",
+        "source_file": "ip/next_actions/trademark_official_fee.pdf",
+        "file_hash": "c0fee39ce0d2747dde1acca6297241f9c2e4e46b972524b3ff3911f78b139d77",
+        "domain": "ip",
+        "source_type": "procedure",
+        "action_type": "trademark_registration",
+        "source_url": null,
+        "chunks": 6
+    },
+    "next_actions/Design_Filing_Process.txt": {
+        "source_key": "next_actions/Design_Filing_Process.txt",
+        "source_file": "next_actions/Design_Filing_Process.txt",
+        "file_hash": "4ef3fc0d56093974ccd4b8e3b7b52c4a414dcac7a5321c25d805d766c8de05f3",
+        "domain": "general",
+        "source_type": "procedure",
+        "action_type": "design_registration",
+        "source_url": "https://ipindia.gov.in/pages/designs/learn/filing-process-step-by-step",
+        "chunks": 2
+    },
+    "next_actions/Patent_Filing_Process.txt": {
+        "source_key": "next_actions/Patent_Filing_Process.txt",
+        "source_file": "next_actions/Patent_Filing_Process.txt",
+        "file_hash": "59573d7c141dcb9c9ba996fc5a2faac3d9d19e074ed7afb2906d4f3ada57d194",
+        "domain": "general",
+        "source_type": "procedure",
+        "action_type": "patent_filing",
+        "source_url": "https://ipindia.gov.in/filing-process",
+        "chunks": 5
+    },
+    "next_actions/Trademark_Filing_Process.txt": {
+        "source_key": "next_actions/Trademark_Filing_Process.txt",
+        "source_file": "next_actions/Trademark_Filing_Process.txt",
+        "file_hash": "1960899a3de433218902ff1e0f462431b7cfba0a826f605adcddf7c5b5617b46",
+        "domain": "general",
+        "source_type": "procedure",
+        "action_type": "trademark_registration",
+        "source_url": "https://ipindia.gov.in/application-workflow/trademark-filing-process",
+        "chunks": 3
+    },
+    "ip/next_actions/Design_Filing_Process.txt": {
+        "source_key": "ip/next_actions/Design_Filing_Process.txt",
+        "source_file": "ip/next_actions/Design_Filing_Process.txt",
+        "file_hash": "4ef3fc0d56093974ccd4b8e3b7b52c4a414dcac7a5321c25d805d766c8de05f3",
+        "domain": "ip",
+        "source_type": "procedure",
+        "action_type": "design_registration",
+        "source_url": "https://ipindia.gov.in/pages/designs/learn/filing-process-step-by-step",
+        "chunks": 2
+    },
+    "ip/next_actions/Patent_Filing_Process.txt": {
+        "source_key": "ip/next_actions/Patent_Filing_Process.txt",
+        "source_file": "ip/next_actions/Patent_Filing_Process.txt",
+        "file_hash": "59573d7c141dcb9c9ba996fc5a2faac3d9d19e074ed7afb2906d4f3ada57d194",
+        "domain": "ip",
+        "source_type": "procedure",
+        "action_type": "patent_filing",
+        "source_url": "https://ipindia.gov.in/filing-process",
+        "chunks": 5
+    },
+    "ip/next_actions/Trademark_Filing_Process.txt": {
+        "source_key": "ip/next_actions/Trademark_Filing_Process.txt",
+        "source_file": "ip/next_actions/Trademark_Filing_Process.txt",
+        "file_hash": "1960899a3de433218902ff1e0f462431b7cfba0a826f605adcddf7c5b5617b46",
+        "domain": "ip",
+        "source_type": "procedure",
+        "action_type": "trademark_registration",
+        "source_url": "https://ipindia.gov.in/application-workflow/trademark-filing-process",
+        "chunks": 3
     }
 }

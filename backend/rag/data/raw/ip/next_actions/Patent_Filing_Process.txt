@@ -1,0 +1,107 @@
+Filing Process
+Home
+Patents
+Before You Apply
+Filing Process
+Filing of Patent Application
+Roadmap for Innovators
+View Document
+Filing of Patent Application
+It is not necessary to visit the Patent Office to file the application, as an online
+filing facility is
+provided.
+Only in cases where the application is required to be filed offline, the same can be
+filed physically at
+the counter
+of the Office or can be sent by post to the Patent Office. Moreover, all communications
+by the office
+are made through emails.
+A patent application can be filed with the Indian Patent Office either with a
+provisional specification
+or with a
+complete specification along with the fee as prescribed in Schedule I. In case the
+application is filed
+with a
+provisional specification, the applicant must file the complete specification within 12
+months from the
+date of filing
+of the provisional specification. There is no further extension of time to file the
+complete
+specification after the expiry of the said period.
+Patent applications can be filed through the comprehensive online filing system available
+at:
+https://ipronline.ipindia.gov.in/epatentfiling/goForLogin/doLogin
+Digital Signature Certificate (DSC)
+To register for filing of a patent application, the applicant can use a Digital
+Signature Certificate (DSC)
+or E-sign as per convenience. If the user wants to use DSC, the user is required to
+obtain a
+Class II/III digital signature without encryption from authorized vendors.
+Vendor
+URL
+Vendor's list along with their URL
+View Vendor List
+eMudhra Digital Signature Registration
+Register for Digital Signature
+E-Signature (E-Sign)
+If the user wants to use E-signature, complete information is available under different
+tabs.
+The user will have to procure the E-sign from the authorized vendor using Aadhaar number
+or PAN number.
+E-Sign Introduction:
+View Details
+Registration and Installation Details:
+View Steps
+Web URL to procure E-Sign:
+Procure E-Sign
+Process After obtaining DSC or E-sign
+After obtaining the Digital Signature or the E-sign, the user can register on the Patent
+Office website by creating
+a user ID and password. The user can log in using these credentials.
+After logging into the e-filing account, the user can select the required form, fill in
+the details, save the draft,
+and upload all relevant documents. The documents can then be digitally signed through
+DSC or E-sign.
+After digitally signing the documents, they will appear under the
+"Payment"
+tab.
+The user can click on the payment tab and select the particular form to make payment.
+After successful payment, an acknowledgement receipt will be generated.
+All previously drafted forms are available under the
+"Form History"
+tab
+and further under the
+"Drafted Forms"
+section. If a user discards any forms, they will appear
+under the
+"Discarded Forms"
+section.
+Users can locate previously drafted forms using the specific date range filter.
+Users can also update their mobile number and email through the e-filing module under
+the
+"User Panel"
+tab.
+Generally, in order to file an application, an applicant is required to file Form 1 which
+is a request for filing an application and Form 2 which is either a provisional or
+complete specification with drawings, if any. In addition to these, an abstract of the
+invention is also required. If the application is filed through a registered patent
+agent, a power of authority in favour of the said agent in Form 26 is also required. The
+application can be examined only after receipt of request for examination on Form
+18/18A. The complete list of forms is available on the website
+www.ipindia.gov.in
+Useful Links for E-Filing
+The user can visit the e-filing website where detailed information is available:
+Digital Signature Information:
+View Information
+General FAQs:
+View FAQs
+Digital Signature Manual:
+Download Manual
+**
+Disclaimer: The information provided on this page is for general guidance only. It does not
+constitute legal advice, statutory interpretation, or an official statement of law. In case of
+any inconsistency, the provisions of the Patents Act, 1970, the Patents Rules, 2003, and
+applicable notifications shall prevail. This content shall not be relied upon, cited, or used
+for interpretation in any judicial, quasi-judicial, or administrative proceedings. The Office of
+the Controller General of Patents, Designs and Trade Marks shall not be liable for any action
+taken based on this explanatory material.

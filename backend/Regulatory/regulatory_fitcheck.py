@@ -117,10 +117,15 @@ class RegulatoryFitCheck:
 
         categories = {
             "licensing": "licensing and registration requirements",
+
             "labelling": "labelling and packaging requirements",
+
             "safety": "safety, quality and testing requirements",
+
             "gmp": "Good Manufacturing Practices GMP requirements",
+
             "claims": "claims, advertising and disease treatment claims",
+
             "applicable_regulations": (
                 "applicable regulations, rules, standards "
                 "and regulatory framework"
@@ -149,35 +154,12 @@ class RegulatoryFitCheck:
                     for result in results
                 ]
             }
-            result = {
-    "product_context": product_context,
-    "overall_status": (
-        "Review required"
-        if general_results
-        else "Insufficient evidence"
-    ),
-    "checks": checks,
-    "general_evidence": [
-        self.map_citation(result)
-        for result in general_results
-    ],
-    "disclaimer": (
-        "This Regulatory FitCheck provides "
-        "information based on retrieved regulatory "
-        "sources and is not legal advice."
-    )
-}
-            result["llm_answer"] = self.answer_generator.generate_regulatory_answer(
-    product_context,
-    result
-)
-            return result
 
         # ----------------------------------------------
         # 4. Overall result
         # ----------------------------------------------
 
-        return {
+        result = {
             "product_context": product_context,
 
             "overall_status": (
@@ -199,6 +181,19 @@ class RegulatoryFitCheck:
                 "sources and is not legal advice."
             )
         }
+
+        # ----------------------------------------------
+        # 5. Generate final explanation using Groq LLM
+        # ----------------------------------------------
+
+        result["llm_answer"] = (
+            self.answer_generator.generate_regulatory_answer(
+                product_context,
+                result
+            )
+        )
+
+        return result
 
 
 # ------------------------------------------------------

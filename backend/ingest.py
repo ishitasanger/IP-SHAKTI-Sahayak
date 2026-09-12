@@ -2,13 +2,18 @@ from pathlib import Path
 import hashlib
 import json
 
+
 from rag.ingestion.loader import load_file
 from rag.ingestion.cleaner import clean_documents
 from rag.ingestion.chunker import create_chunks
+
+
 from rag.retrieval.metadata import (
     infer_domain,
-    infer_source_type
+    infer_source_type,
+    infer_action_type
 )
+
 
 from rag.retrieval.embeddings import create_embeddings
 from rag.retrieval.vector_store import VectorStore
@@ -28,41 +33,54 @@ DOCUMENTS_PATH = DATA_DIR / "documents.json"
 SUPPORTED_EXTENSIONS = {
     ".pdf",
     ".html",
-    ".htm"
+    ".htm",
+    ".txt"
 }
 
 
 # --------------------------------------------------
-# OPTIONAL: official source URLs
+# OFFICIAL SOURCE URLS
 # --------------------------------------------------
-
 SOURCE_URLS = {
-    # Example:
-    #
-    # "ip/rules/Patents_Rules_2003.html":
-    #     "https://ipindia.gov.in/pages/patents/rules-patents-2003",
-}
+    "ip/next_actions/Patent_Filing_Process.txt":
+        "https://ipindia.gov.in/filing-process",
 
+    "ip/next_actions/Trademark_Filing_Process.txt":
+        "https://ipindia.gov.in/application-workflow/trademark-filing-process",
+
+    "ip/next_actions/Design_Filing_Process.txt":
+        "https://ipindia.gov.in/pages/designs/learn/filing-process-step-by-step",
+}
 
 def calculate_file_hash(file_path):
+
     """
     Calculate SHA-256 hash of a local source file.
     """
 
     sha256 = hashlib.sha256()
 
-    with open(file_path, "rb") as file:
+    with open(
+        file_path,
+        "rb"
+    ) as file:
 
         for block in iter(
-            lambda: file.read(1024 * 1024),
+            lambda: file.read(
+                1024 * 1024
+            ),
             b""
         ):
-            sha256.update(block)
+
+            sha256.update(
+                block
+            )
 
     return sha256.hexdigest()
 
 
 def load_registry():
+
     if not DOCUMENTS_PATH.exists():
         return {}
 
@@ -74,11 +92,17 @@ def load_registry():
         "r",
         encoding="utf-8"
     ) as file:
-        data = json.load(file)
+
+        data = json.load(
+            file
+        )
 
     # Support the old {"documents": {...}} format
-    # if it exists.
-    if isinstance(data, dict) and "documents" in data:
+    if (
+        isinstance(data, dict)
+        and "documents" in data
+    ):
+
         return data["documents"]
 
     # Current format
@@ -92,6 +116,7 @@ def load_registry():
 
 
 def save_registry(registry):
+
     """
     Save documents.json.
     """
@@ -111,6 +136,7 @@ def save_registry(registry):
 
 
 def get_source_key(file_path):
+
     """
     Stable path relative to raw/.
     """
@@ -121,19 +147,25 @@ def get_source_key(file_path):
 
 
 def get_source_url(file_path):
+
     """
     Return official source URL if configured.
     """
 
-    key = get_source_key(file_path)
+    key = get_source_key(
+        file_path
+    )
 
-    return SOURCE_URLS.get(key)
+    return SOURCE_URLS.get(
+        key
+    )
 
 
 def remove_existing_source(
     vector_store,
     source_key
 ):
+
     """
     Remove all Chroma chunks belonging to
     an old version of this source.
@@ -180,7 +212,9 @@ def main():
 
     if not all_files:
 
-        print("No PDF or HTML files found.")
+        print(
+            "No supported source files found."
+        )
 
         print(
             f"Put sources inside: {RAW_DIR}"
@@ -257,7 +291,7 @@ def main():
             file_path
         )
 
-        # Load PDF / HTML.
+        # Load PDF / HTML / TXT
         documents = load_file(
             str(file_path),
             source_url=source_url,
@@ -272,27 +306,48 @@ def main():
             documents
         )
 
-        # Attach metadata.
+        # ----------------------------------------------
+        # METADATA
+        # ----------------------------------------------
+
+        domain = infer_domain(
+            file_path
+        )
+
+        source_type = infer_source_type(
+            file_path
+        )
+
+        action_type = infer_action_type(
+            file_path
+        )
+
+        # Attach metadata to every chunk
         for chunk in chunks:
 
             metadata = {
                 "document": Path(
                     chunk["source"]
                 ).stem,
-                "domain": infer_domain(
-                    file_path
-                ),
+
+                "domain": domain,
+
                 "jurisdiction": "India",
-                "source_type": infer_source_type(
-                    file_path
-                ),
+
+                "source_type": source_type,
+
+                "action_type": action_type,
+
                 "source_file": source_key,
+
                 "source_key": source_key,
+
                 "page": (
                     chunk.get("page")
                     if chunk.get("page")
                     else 0
                 ),
+
                 "section": (
                     chunk.get("section")
                     or "Not specified"
@@ -300,11 +355,13 @@ def main():
             }
 
             if chunk.get("source_url"):
+
                 metadata[
                     "source_url"
                 ] = chunk["source_url"]
 
             if chunk.get("parent_source"):
+
                 metadata[
                     "parent_source"
                 ] = chunk["parent_source"]
@@ -315,22 +372,37 @@ def main():
             chunks
         )
 
+        # ----------------------------------------------
+        # REGISTRY
+        # ----------------------------------------------
+
         registry[source_key] = {
+
             "source_key": source_key,
+
             "source_file": source_key,
+
             "file_hash": current_hash,
-            "domain": infer_domain(
-                file_path
-            ),
-            "source_type": infer_source_type(
-                file_path
-            ),
+
+            "domain": domain,
+
+            "source_type": source_type,
+
+            "action_type": action_type,
+
             "source_url": source_url,
+
             "chunks": len(chunks)
         }
 
         print(
-            f"  Chunks created: {len(chunks)}"
+            f"  Chunks created: "
+            f"{len(chunks)}"
+        )
+
+        print(
+            f"  Action type: "
+            f"{action_type}"
         )
 
     # --------------------------------------------------
@@ -401,22 +473,40 @@ def main():
             }
         )
 
-        ids = results.get("ids", [])
+        ids = results.get(
+            "ids",
+            []
+        )
+
         texts = results.get(
             "documents"
         ) or []
+
         metadatas = results.get(
             "metadatas",
             []
         )
 
-        for i in range(len(ids)):
+        for i in range(
+            len(ids)
+        ):
 
-            metadata = (metadatas[i] if metadatas and i < len(metadatas) else {}) or {}
+            metadata = (
+                metadatas[i]
+                if metadatas
+                and i < len(metadatas)
+                else {}
+            ) or {}
 
             all_chunks.append({
                 "id": ids[i],
-                "text": texts[i] if texts[i] is not None else "",
+
+                "text": (
+                    texts[i]
+                    if texts[i] is not None
+                    else ""
+                ),
+
                 "metadata": metadata
             })
 

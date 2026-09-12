@@ -33,12 +33,45 @@ def load_pdf(pdf_path: str):
     return pages
 
 
+def load_text(
+    text_path: str,
+    source_url: str | None = None
+):
+    """
+    Load a plain text source.
+    """
+
+    text_path = Path(text_path).resolve()
+
+    if not text_path.exists():
+        raise FileNotFoundError(
+            f"Text file not found: {text_path}"
+        )
+
+    text = text_path.read_text(
+        encoding="utf-8",
+        errors="ignore"
+    )
+
+    return [
+        {
+            "text": text,
+            "page": None,
+            "source": text_path.name,
+            "source_url": source_url
+        }
+    ]
+
+
 def _extract_html_text(html: str):
     """
     Extract meaningful text from an HTML document.
     """
 
-    soup = BeautifulSoup(html, "html.parser")
+    soup = BeautifulSoup(
+        html,
+        "html.parser"
+    )
 
     # Remove non-content elements.
     for element in soup([
@@ -55,48 +88,83 @@ def _extract_html_text(html: str):
     main = soup.find("main")
 
     if main:
-        text = main.get_text(" ", strip=True)
+        text = main.get_text(
+            " ",
+            strip=True
+        )
     else:
-        text = soup.get_text(" ", strip=True)
+        text = soup.get_text(
+            " ",
+            strip=True
+        )
 
     return text
 
 
-def _extract_links(html: str, base_url: str):
+def _extract_links(
+    html: str,
+    base_url: str
+):
     """
     Extract relevant same-domain links from an HTML page.
     """
 
-    soup = BeautifulSoup(html, "html.parser")
+    soup = BeautifulSoup(
+        html,
+        "html.parser"
+    )
 
-    base_domain = urlparse(base_url).netloc
+    base_domain = urlparse(
+        base_url
+    ).netloc
 
     links = []
 
-    for anchor in soup.find_all("a", href=True):
+    for anchor in soup.find_all(
+        "a",
+        href=True
+    ):
+
         href = anchor["href"].strip()
 
         if not href:
             continue
 
         # Ignore non-web links.
-        if href.startswith(("#", "javascript:", "mailto:", "tel:")):
+        if href.startswith((
+            "#",
+            "javascript:",
+            "mailto:",
+            "tel:"
+        )):
             continue
 
-        full_url = urljoin(base_url, href)
-        parsed = urlparse(full_url)
+        full_url = urljoin(
+            base_url,
+            href
+        )
+
+        parsed = urlparse(
+            full_url
+        )
 
         # Only stay on the same official domain.
         if parsed.netloc != base_domain:
             continue
 
         # Only HTTP(S).
-        if parsed.scheme not in ("http", "https"):
+        if parsed.scheme not in (
+            "http",
+            "https"
+        ):
             continue
 
         links.append({
             "url": full_url,
-            "anchor": anchor.get_text(" ", strip=True)
+            "anchor": anchor.get_text(
+                " ",
+                strip=True
+            )
         })
 
     # Remove duplicates while preserving order.
@@ -104,9 +172,16 @@ def _extract_links(html: str, base_url: str):
     unique_links = []
 
     for link in links:
+
         if link["url"] not in seen:
-            seen.add(link["url"])
-            unique_links.append(link)
+
+            seen.add(
+                link["url"]
+            )
+
+            unique_links.append(
+                link
+            )
 
     return unique_links
 
@@ -124,10 +199,14 @@ def load_html(
     incorporated into the corpus.
     """
 
-    html_path = Path(html_path).resolve()
+    html_path = Path(
+        html_path
+    ).resolve()
 
     if not html_path.exists():
-        raise FileNotFoundError(f"HTML not found: {html_path}")
+        raise FileNotFoundError(
+            f"HTML not found: {html_path}"
+        )
 
     html = html_path.read_text(
         encoding="utf-8",
@@ -138,7 +217,9 @@ def load_html(
 
     # Main local HTML page.
     pages.append({
-        "text": _extract_html_text(html),
+        "text": _extract_html_text(
+            html
+        ),
         "page": None,
         "source": html_path.name,
         "source_url": source_url
@@ -147,14 +228,20 @@ def load_html(
     if not follow_links or not source_url:
         return pages
 
-    links = _extract_links(html, source_url)
+    links = _extract_links(
+        html,
+        source_url
+    )
 
     for link in links:
 
         try:
+
             response = requests.get(
                 link["url"],
-                headers={"User-Agent": USER_AGENT},
+                headers={
+                    "User-Agent": USER_AGENT
+                },
                 timeout=20
             )
 
@@ -176,7 +263,9 @@ def load_html(
             if not linked_text:
                 continue
 
-            parsed = urlparse(link["url"])
+            parsed = urlparse(
+                link["url"]
+            )
 
             linked_name = (
                 Path(parsed.path).name
@@ -196,8 +285,10 @@ def load_html(
             )
 
         except requests.RequestException as error:
+
             print(
-                f"    Could not fetch {link['url']}: {error}"
+                f"    Could not fetch "
+                f"{link['url']}: {error}"
             )
 
     return pages
@@ -212,16 +303,32 @@ def load_file(
     Automatically choose the appropriate loader.
     """
 
-    suffix = Path(file_path).suffix.lower()
+    suffix = Path(
+        file_path
+    ).suffix.lower()
 
     if suffix == ".pdf":
-        return load_pdf(file_path)
 
-    if suffix in (".html", ".htm"):
+        return load_pdf(
+            file_path
+        )
+
+    if suffix in (
+        ".html",
+        ".htm"
+    ):
+
         return load_html(
             file_path,
             source_url=source_url,
             follow_links=follow_links
+        )
+
+    if suffix == ".txt":
+
+        return load_text(
+            file_path,
+            source_url=source_url
         )
 
     raise ValueError(
