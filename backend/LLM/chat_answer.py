@@ -1,4 +1,4 @@
-from LLM.llm import GroqLLM
+from .llm import GroqLLM
 
 
 class ChatAnswerGenerator:
@@ -15,6 +15,15 @@ class ChatAnswerGenerator:
         chat_history=None,
         retrieved_evidence=None
     ):
+
+        # Safeguard context size to prevent exceeding Groq TPM token limits (8000 TPM)
+        legal_report_str = str(legal_report) if legal_report else "None"
+        if len(legal_report_str) > 3000:
+            legal_report_str = legal_report_str[:3000] + "... [context truncated for length]"
+
+        roadmap_str = str(roadmap) if roadmap else "None"
+        if len(roadmap_str) > 1500:
+            roadmap_str = roadmap_str[:1500] + "... [context truncated for length]"
 
         prompt = f"""
 You are IP-SHAKTI Sahayak, an Ayurveda IP and regulatory
@@ -35,10 +44,10 @@ PRODUCT CONTEXT:
 {product_context}
 
 LEGAL REPORT:
-{legal_report}
+{legal_report_str}
 
 ROADMAP / ACTION PLAN:
-{roadmap}
+{roadmap_str}
 
 PREVIOUS CONVERSATION:
 {chat_history}

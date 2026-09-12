@@ -4,11 +4,16 @@ import re
 
 MODEL_NAME = "BAAI/bge-reranker-base"
 
+_shared_cross_encoder = None
+
 
 class Reranker:
 
     def __init__(self):
-        self.model = CrossEncoder(MODEL_NAME)
+        global _shared_cross_encoder
+        if _shared_cross_encoder is None:
+            _shared_cross_encoder = CrossEncoder(MODEL_NAME)
+        self.model = _shared_cross_encoder
 
     def rerank(self, query, results, top_k=5):
 

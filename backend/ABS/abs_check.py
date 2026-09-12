@@ -1,5 +1,5 @@
-from rag.rag_engine import RAGEngine
-from LLM.answer_generator import AnswerGenerator
+from ..rag.rag_engine import RAGEngine
+from ..LLM.answer_generator import AnswerGenerator
 
 
 class ABSCheck:

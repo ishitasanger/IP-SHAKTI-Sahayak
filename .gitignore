@@ -12,3 +12,7 @@ env/
 
 # Generated RAG database
 backend/rag/data/chroma_db/
+
+# TypeScript build info
+*.tsbuildinfo
+frontend/tsconfig.tsbuildinfo

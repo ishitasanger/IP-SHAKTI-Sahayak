@@ -1,6 +1,6 @@
 from typing import Optional
 from pydantic import BaseModel
-from Classification import ProductContext
+from .Classification.classifier_wizard import ProductContext
 
 
 class WorkflowContext(BaseModel):

@@ -1,81 +1,99 @@
-from importlib import import_module
+from typing import Any, Dict, List, Optional
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, Field
 
-try:
-    _fastapi = import_module("fastapi")
-    FastAPI = _fastapi.FastAPI
-    HTTPException = _fastapi.HTTPException
-    CORSMiddleware = import_module("fastapi.middleware.cors").CORSMiddleware
-except ImportError as exc:
-    raise RuntimeError(
-        "FastAPI is required to run this application. Install it with "
-        "'pip install fastapi uvicorn'."
-    ) from exc
-try:
-    BaseModel = import_module("pydantic").BaseModel
-except ImportError as exc:
-    raise RuntimeError(
-        "Pydantic is required to run this application. Install it with "
-        "'pip install pydantic'."
-    ) from exc
-from .rag.rag_engine import RAGEngine
+from .Classification.classifier_wizard import WizardInput
+from .final_integration import FinalIntegration
+from .chatbot import IPShaktiChatbot
 
 # Initialize FastAPI App
-app = FastAPI(title="IP-SHAKTI-Sahayak API")
+app = FastAPI(
+    title="IP-SHAKTI-Sahayak API",
+    description="FastAPI integration layer for IP-SHAKTI Sahayak IP and regulatory guidance.",
+    version="1.0.0",
+)
 
-# Setup CORS to allow Next.js frontend calls
+# Setup CORS to allow Next.js frontend calls during development
+origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Adjust in production
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Initialize RAG Engine
-rag = RAGEngine()
+
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+
 
 class ChatRequest(BaseModel):
     question: str
+    product_context: Optional[Dict[str, Any]] = Field(default_factory=dict)
+    legal_report: Optional[Dict[str, Any]] = Field(default_factory=dict)
+    roadmap: Optional[Dict[str, Any]] = Field(default_factory=dict)
+    chat_history: Optional[List[ChatMessage]] = Field(default_factory=list)
+
+
+@app.post("/api/assessment")
+async def assessment_endpoint(wizard_input: WizardInput):
+    """
+    Accepts wizard input, runs the multi-domain IP, Regulatory, TKDL, and ABS
+    assessments along with roadmap generation via FinalIntegration, and returns
+    the normalized legal report and roadmap.
+    """
+    try:
+        result = FinalIntegration().run(wizard_input)
+        return {
+            "legal_report": {
+                "product_context": result.get("product_context"),
+                "ip_assessment": result.get("ip_assessment"),
+                "regulatory_assessment": result.get("regulatory_assessment"),
+                "tkdl_assessment": result.get("tkdl_assessment"),
+                "abs_assessment": result.get("abs_assessment"),
+            },
+            "roadmap": result.get("roadmap") or {},
+        }
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
 
 @app.post("/api/chat")
 async def chat_endpoint(request: ChatRequest):
+    """
+    Accepts user question, product context, legal report, roadmap, and chat history,
+    and returns source-grounded answers from IPShaktiChatbot.
+    """
     try:
-        query = request.question.strip()
-        if not query:
-            raise HTTPException(status_code=400, detail="Question cannot be empty.")
-        
-        # Retrieve top results using your RAGEngine
-        results = rag.search(query=query, top_k=5)
-        
-        if not results:
-            return {"response": "No relevant IP legal documents found for your query."}
+        result = IPShaktiChatbot().answer(
+            question=request.question,
+            product_context=request.product_context,
+            legal_report=request.legal_report,
+            roadmap=request.roadmap,
+            chat_history=request.chat_history,
+        )
+        return result
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
 
-        # Format retrieved evidence into a response text
-        response_text = "### Retrieved Legal Evidence:\n\n"
-        for index, result in enumerate(results, start=1):
-            response_text += f"**{index}. Document:** {result.document} (Section: {result.section}, Page: {result.page})\n"
-            response_text += f"**Excerpt:** {result.text}\n\n"
-
-        return {"response": response_text}
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
-    import subprocess
-    import sys
+    import uvicorn
 
-    subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "uvicorn",
-            "backend.main:app",
-            "--host",
-            "127.0.0.1",
-            "--port",
-            "8000",
-            "--reload",
-        ],
-        check=True,
+    uvicorn.run(
+        "backend.main:app",
+        host="127.0.0.1",
+        port=8000,
+        reload=True,
     )

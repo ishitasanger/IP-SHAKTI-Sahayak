@@ -1,6 +1,6 @@
 from typing import Any, Dict, List
 
-from rag.rag_engine import RAGEngine
+from ..rag.rag_engine import RAGEngine
 
 
 class RoadmapGenerator:
@@ -195,9 +195,11 @@ class RoadmapGenerator:
         results = self.rag.search(
             query=action["query"],
             filters={
-                "domain": action["domain"],
-                "jurisdiction": "India",
-                "action_type": action["action_type"],
+                "$and": [
+                    {"domain": action["domain"]},
+                    {"jurisdiction": "India"},
+                    {"action_type": action["action_type"]},
+                ]
             },
             top_k=self.top_k,
         )

@@ -1,4 +1,4 @@
-from LLM.llm import GroqLLM
+from .llm import GroqLLM
 
 
 class AnswerGenerator:

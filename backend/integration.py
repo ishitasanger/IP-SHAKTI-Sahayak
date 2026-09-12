@@ -1,14 +1,14 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from Classification.classifier_wizard import (
+from .Classification.classifier_wizard import (
     WizardInput,
     classify_product
 )
 
-from IP.ip_checker import IPChecker
-from Regulatory.regulatory_fitcheck import RegulatoryFitCheck
-from TKDL.tkdl_check import TKDLCheck
-from ABS.abs_check import ABSCheck
+from .IP.ip_checker import IPChecker
+from .Regulatory.regulatory_fitcheck import RegulatoryFitCheck
+from .TKDL.tkdl_check import TKDLCheck
+from .ABS.abs_check import ABSCheck
 
 
 class IPShaktiOrchestrator:

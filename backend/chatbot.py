@@ -1,5 +1,5 @@
-from rag.rag_engine import RAGEngine
-from LLM.chat_answer import ChatAnswerGenerator
+from .rag.rag_engine import RAGEngine
+from .LLM.chat_answer import ChatAnswerGenerator
 
 
 class IPShaktiChatbot:

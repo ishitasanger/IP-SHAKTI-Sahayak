@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Optional
 
-from Classification.classifier_wizard import ProductContext
-from rag.rag_engine import RAGEngine
+from ..Classification.classifier_wizard import ProductContext
+from ..rag.rag_engine import RAGEngine
 
 
 class IPScreeningResult:
@@ -43,6 +43,10 @@ class IPScreeningResult:
             "summary": self.summary,
             "disclaimer": self.disclaimer,
         }
+
+    def model_dump(self, *args, **kwargs) -> Dict[str, Any]:
+
+        return self.to_dict()
 
 
 class IPChecker:
