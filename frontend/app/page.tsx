@@ -1017,60 +1017,6 @@ function JurisdictionStep({
   )
 }
 
-function renderChecks(
-  checks?: Record<string, { status: string; evidence?: SourceCitation[]; sources?: SourceCitation[] }>
-) {
-  if (!checks || Object.keys(checks).length === 0) {
-    return (
-      <p style={{ color: 'var(--muted-foreground)', fontSize: '12px' }}>
-        No specific category checks returned.
-      </p>
-    )
-  }
-  return (
-    <div className="cards-grid">
-      {Object.entries(checks).map(([catKey, val]) => {
-        const citations = val.sources && val.sources.length > 0 ? val.sources : (val.evidence || [])
-        const topCitation = citations[0]
-        const isReview =
-          val.status === 'Review' ||
-          val.status?.toLowerCase().includes('required') ||
-          val.status?.toLowerCase().includes('caution') ||
-          val.status?.toLowerCase().includes('applicable')
-        return (
-          <div key={catKey} className="evidence-card">
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '6px',
-              }}
-            >
-              <strong style={{ textTransform: 'capitalize' }}>
-                {catKey.replace(/_/g, ' ')}
-              </strong>
-              <span className={`badge ${isReview ? 'badge-amber' : 'badge-mint'}`}>
-                {val.status}
-              </span>
-            </div>
-            {topCitation ? (
-              <div style={{ fontSize: '10px', color: 'var(--muted-foreground)' }}>
-                {topCitation.document}
-                {topCitation.section ? ` — ${topCitation.section}` : ''}
-              </div>
-            ) : (
-              <div style={{ fontSize: '10px', color: 'var(--muted-foreground)' }}>
-                Standard statutory guidelines apply
-              </div>
-            )}
-          </div>
-        )
-      })}
-    </div>
-  )
-}
-
 /* =========================================================================
    STAGE 5: Regulatory Assessment Step
    ========================================================================= */
@@ -1129,11 +1075,6 @@ function RegulatoryAssessmentStep({
               </div>
             </div>
           )}
-
-          <div style={{ marginTop: '16px' }}>
-            <span className="evidence-title">Category Requirements Breakdown</span>
-            <div style={{ marginTop: '8px' }}>{renderChecks(reg?.checks)}</div>
-          </div>
         </div>
 
         {evidenceList.length > 0 && (
@@ -1209,8 +1150,7 @@ function TKDLScreeningStep({
     tkdl?.sources && tkdl.sources.length > 0
       ? tkdl.sources
       : (tkdl?.general_evidence || [])
-  const hasChecks = tkdl?.checks && Object.keys(tkdl.checks).length > 0
-  const hasEvidence = evidenceList.length > 0
+  const hasActualData = Boolean(tkdl?.llm_answer && evidenceList.length > 0)
 
   return (
     <div className="analysis-screen page-enter">
@@ -1225,108 +1165,97 @@ function TKDLScreeningStep({
       />
 
       <div className="assessment-layout">
-        <div className="domain-card">
-          <div className="domain-header">
-            <h3>TKDL Screening Status</h3>
-            <span className="badge badge-teal">
-              {tkdl?.overall_status || 'Insufficient TKDL evidence'}
-            </span>
-          </div>
-
-          {tkdl?.llm_answer ? (
-            <div className="llm-box" style={{ marginTop: '12px' }}>
-              <strong>
-                <Sparkles size={14} /> Traditional Knowledge Synthesis
-              </strong>
-              <div className="chat-markdown" style={{ marginTop: '8px' }}>
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {tkdl.llm_answer}
-                </ReactMarkdown>
-              </div>
-            </div>
-          ) : null}
-
-          {/* If no evidence or insufficient evidence, display intentional professional empty state */}
-          {!hasEvidence && !hasChecks ? (
+        {!hasActualData ? (
+          <div
+            className="domain-card"
+            style={{
+              textAlign: 'center',
+              padding: '48px 24px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
             <div
               style={{
-                background: '#faf9f5',
-                border: '1px solid var(--border)',
-                borderRadius: '12px',
-                padding: '28px 20px',
-                textAlign: 'center',
-                marginTop: '16px',
+                width: '48px',
+                height: '48px',
+                borderRadius: '50%',
+                background: '#f0f7f5',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: '14px',
               }}
             >
-              <BookOpen size={30} style={{ color: '#4a9181', margin: '0 auto 10px' }} />
-              <h4 style={{ fontSize: '16px', margin: '0 0 6px', color: 'var(--foreground)' }}>
-                Insufficient TKDL Evidence Available
-              </h4>
-              <p
-                style={{
-                  color: 'var(--muted-foreground)',
-                  fontSize: '12px',
-                  maxWidth: '560px',
-                  margin: '0 auto 14px',
-                  lineHeight: 1.5,
-                }}
-              >
-                No direct prior-art citations were matched from the Traditional Knowledge Digital Library corpus for this formulation.
-              </p>
-              <div
-                style={{
-                  background: '#fff',
-                  border: '1px solid #e2ddd3',
-                  borderRadius: '8px',
-                  padding: '12px 16px',
-                  maxWidth: '540px',
-                  margin: '0 auto',
-                  textAlign: 'left',
-                  fontSize: '12px',
-                  color: 'var(--foreground)',
-                }}
-              >
-                <strong style={{ display: 'block', marginBottom: '4px' }}>
-                  Section 3(p) Statutory Safeguard:
-                </strong>
-                <span style={{ color: 'var(--muted-foreground)', lineHeight: 1.4 }}>
-                  Under Section 3(p) of the Indian Patents Act 1970, an invention which is traditional knowledge or an aggregation/duplication of known properties of traditionally known component(s) is not patentable. When classical evidence is not indexed in TKDL, independent prior art searches remain advisable for novelty substantiation.
+              <BookOpen size={24} style={{ color: '#4a9181' }} />
+            </div>
+            <h3 style={{ fontSize: '18px', fontWeight: 600, margin: '0 0 8px', color: 'var(--foreground)' }}>
+              TKDL Screening
+            </h3>
+            <p
+              style={{
+                color: 'var(--muted-foreground)',
+                fontSize: '13px',
+                maxWidth: '460px',
+                margin: '0 auto',
+                lineHeight: 1.5,
+              }}
+            >
+              No TKDL screening results are currently available for this assessment.
+            </p>
+          </div>
+        ) : (
+          <>
+            <div className="domain-card">
+              <div className="domain-header">
+                <h3>TKDL Screening Status</h3>
+                <span className="badge badge-teal">
+                  {tkdl?.overall_status || 'TKDL Evidence'}
                 </span>
               </div>
-            </div>
-          ) : (
-            <div style={{ marginTop: '16px' }}>
-              <span className="evidence-title">Prior Art & Classical Checks</span>
-              <div style={{ marginTop: '8px' }}>{renderChecks(tkdl?.checks)}</div>
-            </div>
-          )}
-        </div>
-
-        {hasEvidence && (
-          <div className="domain-card">
-            <div className="domain-header">
-              <h3>TKDL Reference Citations</h3>
-              <span className="badge badge-mint">{evidenceList.length} CITATIONS</span>
-            </div>
-            <div className="evidence-section">
-              {evidenceList.map((ev, idx) => (
-                <div key={idx} className="evidence-card">
-                  <strong>{ev.document || 'TKDL Reference'}</strong>
-                  {ev.text && <p style={{ margin: '4px 0', fontSize: '11px' }}>{ev.text}</p>}
-                  <div className="evidence-meta">
-                    {ev.section && <span>Section: {ev.section}</span>}
-                    {ev.page && <span>Page: {ev.page}</span>}
+              {tkdl?.llm_answer && (
+                <div className="llm-box" style={{ marginTop: '12px' }}>
+                  <strong>
+                    <Sparkles size={14} /> Traditional Knowledge Synthesis
+                  </strong>
+                  <div className="chat-markdown" style={{ marginTop: '8px' }}>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {tkdl.llm_answer}
+                    </ReactMarkdown>
                   </div>
                 </div>
-              ))}
+              )}
             </div>
-          </div>
-        )}
 
-        {tkdl?.disclaimer && (
-          <p style={{ fontSize: '11px', color: 'var(--muted-foreground)', fontStyle: 'italic' }}>
-            {tkdl.disclaimer}
-          </p>
+            {evidenceList.length > 0 && (
+              <div className="domain-card">
+                <div className="domain-header">
+                  <h3>TKDL Reference Citations</h3>
+                  <span className="badge badge-mint">{evidenceList.length} CITATIONS</span>
+                </div>
+                <div className="evidence-section">
+                  {evidenceList.map((ev, idx) => (
+                    <div key={idx} className="evidence-card">
+                      <strong>{ev.document || 'TKDL Reference'}</strong>
+                      {ev.text && <p style={{ margin: '4px 0', fontSize: '11px' }}>{ev.text}</p>}
+                      <div className="evidence-meta">
+                        {ev.section && <span>Section: {ev.section}</span>}
+                        {ev.page && <span>Page: {ev.page}</span>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {tkdl?.disclaimer && (
+              <p style={{ fontSize: '11px', color: 'var(--muted-foreground)', fontStyle: 'italic' }}>
+                {tkdl.disclaimer}
+              </p>
+            )}
+          </>
         )}
 
         <div className="screen-footer">
@@ -1362,7 +1291,6 @@ function ABSScreeningStep({
     abs?.sources && abs.sources.length > 0
       ? abs.sources
       : (abs?.general_evidence || [])
-  const hasChecks = abs?.checks && Object.keys(abs.checks).length > 0
 
   return (
     <div className="analysis-screen page-enter">
@@ -1418,13 +1346,6 @@ function ABSScreeningStep({
                   {abs.llm_answer}
                 </ReactMarkdown>
               </div>
-            </div>
-          )}
-
-          {hasChecks && (
-            <div style={{ marginTop: '16px' }}>
-              <span className="evidence-title">Biological Diversity Compliance Checks</span>
-              <div style={{ marginTop: '8px' }}>{renderChecks(abs?.checks)}</div>
             </div>
           )}
         </div>
@@ -1536,31 +1457,131 @@ function RoadmapStep({
                     <strong style={{ fontSize: '14px', display: 'block' }}>
                       {act.action}
                     </strong>
-                    <span style={{ fontSize: '10px', color: 'var(--muted-foreground)', textTransform: 'uppercase' }}>
-                      Domain: {act.domain} · Type: {act.action_type}
-                    </span>
+                    <div style={{ fontSize: '10px', color: 'var(--muted-foreground)', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '6px', marginTop: '2px' }}>
+                      <span style={{ textTransform: 'uppercase' }}>Domain: {act.domain}</span>
+                      {act.origin && (
+                        <>
+                          <span>•</span>
+                          <span>Source: {act.origin}</span>
+                        </>
+                      )}
+                      {act.action_type && (
+                        <>
+                          <span>•</span>
+                          <span style={{ textTransform: 'capitalize' }}>Type: {act.action_type.replace(/_/g, ' ')}</span>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
-                {act.human_escalation && (
-                  <span className="badge badge-amber" title="Expert legal or patent agent review recommended">
-                    <AlertTriangle size={11} /> Professional Review
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span
+                    className={`badge ${
+                      act.domain?.toLowerCase() === 'regulatory'
+                        ? 'badge-amber'
+                        : act.domain?.toLowerCase() === 'abs'
+                        ? 'badge-mint'
+                        : 'badge-teal'
+                    }`}
+                  >
+                    {act.domain?.toUpperCase() || 'ACTION'}
                   </span>
-                )}
+                  {act.human_escalation && (
+                    <span className="badge badge-amber" title="Expert legal or patent agent review recommended">
+                      <AlertTriangle size={11} /> Professional Review
+                    </span>
+                  )}
+                </div>
               </div>
 
-              {act.evidence && act.evidence.length > 0 && (
-                <div className="evidence-section" style={{ marginTop: '6px' }}>
-                  <span className="evidence-title">Official Procedure Citations</span>
-                  {act.evidence.map((ev, evIdx) => (
-                    <div key={evIdx} className="evidence-card">
-                      <strong>{ev.document}</strong>
-                      <p style={{ margin: '3px 0', fontSize: '11px' }}>{ev.text}</p>
-                      <div className="evidence-meta">
-                        {ev.section && <span>Section: {ev.section}</span>}
-                        {ev.page && <span>Page: {ev.page}</span>}
+              {act.next_steps && act.next_steps.length > 0 && (
+                <div
+                  style={{
+                    marginTop: '8px',
+                    background: '#fdfbf7',
+                    border: '1px solid #eee7db',
+                    borderRadius: '8px',
+                    padding: '12px 16px',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: '11px',
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.04em',
+                      color: 'var(--foreground)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      marginBottom: '8px',
+                    }}
+                  >
+                    <CheckCircle2 size={13} style={{ color: '#4a9181' }} />
+                    Recommended Action Steps
+                  </span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    {act.next_steps.map((step, sIdx) => (
+                      <div
+                        key={sIdx}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: '8px',
+                          fontSize: '12px',
+                          lineHeight: 1.5,
+                          color: 'var(--foreground)',
+                        }}
+                      >
+                        <span
+                          style={{
+                            display: 'inline-block',
+                            width: '6px',
+                            height: '6px',
+                            borderRadius: '50%',
+                            background: '#4a9181',
+                            marginTop: '6px',
+                            flexShrink: 0,
+                          }}
+                        />
+                        <span>{step}</span>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {act.answer && (!act.next_steps || act.next_steps.length === 0) && (
+                <div
+                  style={{
+                    marginTop: '8px',
+                    background: '#fdfbf7',
+                    border: '1px solid #eee7db',
+                    borderRadius: '8px',
+                    padding: '12px 16px',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: '11px',
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.04em',
+                      color: 'var(--foreground)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      marginBottom: '6px',
+                    }}
+                  >
+                    <CheckCircle2 size={13} style={{ color: '#4a9181' }} />
+                    Action Detail & Recommendations
+                  </span>
+                  <div className="chat-markdown" style={{ fontSize: '12px', color: 'var(--foreground)' }}>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {act.answer}
+                    </ReactMarkdown>
+                  </div>
                 </div>
               )}
             </div>
@@ -1651,7 +1672,7 @@ function FinalSummaryStep({
           </div>
           <div className="summary-stat-box">
             <span>TKDL Status</span>
-            <strong>{tkdl?.overall_status || 'Review required'}</strong>
+            <strong>{tkdl?.sources && tkdl.sources.length > 0 ? (tkdl.overall_status || 'Assessed') : 'Not available'}</strong>
           </div>
           <div className="summary-stat-box">
             <span>ABS Status</span>
@@ -1688,11 +1709,15 @@ function FinalSummaryStep({
 
           <div className="domain-card">
             <div className="domain-header">
-              <h3>3. TKDL & Heritage</h3>
-              <span className="badge badge-mint">{tkdl?.overall_status || 'Review'}</span>
+              <h3>3. TKDL Screening</h3>
+              <span className="badge badge-neutral">
+                {tkdl?.sources && tkdl.sources.length > 0 ? (tkdl.overall_status || 'Assessed') : 'Not available'}
+              </span>
             </div>
-            <p style={{ fontSize: '12px', margin: 0 }}>
-              Classical references identified ({input.traditional_knowledge_source || 'Charaka Samhita'}). Prior-art barrier prevents standard patent on known traditional formulation.
+            <p style={{ fontSize: '12px', margin: 0, color: 'var(--muted-foreground)' }}>
+              {tkdl?.sources && tkdl.sources.length > 0
+                ? (tkdl.llm_answer || 'TKDL prior-art evaluated.')
+                : 'No TKDL screening results are currently available for this assessment.'}
             </p>
           </div>
 
@@ -1748,6 +1773,73 @@ function FinalSummaryStep({
 }
 
 /* =========================================================================
+   CHATBOT HELPERS & PRESENTATION FORMATTING
+   ========================================================================= */
+function formatChatAnswer(content: string): string {
+  if (!content) return ''
+
+  let text = content
+
+  // 1. Replace standalone "Uncertainty" headings with natural conversational phrasing
+  text = text.replace(
+    /(?:^|\n)(?:#{1,4}\s*|\*{2}|_{2})(?:Uncertainty(?:\s+Statement)?|Limitations?):?(?:\*{2}|_{2})?:?\s*\n*/gi,
+    '\n\n**Note on statutory applicability:** '
+  )
+
+  // 2. Replace standalone "Next step" / "Next steps" headings with natural conversational transitions
+  text = text.replace(
+    /(?:^|\n)(?:#{1,4}\s*|\*{2}|_{2})(?:(?:Recommended\s+|Practical\s+)?Next\s*steps?:?)(?:\*{2}|_{2})?:?\s*\n*/gi,
+    '\n\n**Practical considerations:** '
+  )
+
+  // 3. Remove any trailing duplicate "Sources:" or "Retrieved Sources:" blocks output in markdown
+  text = text.replace(
+    /(?:^|\n)(?:#{1,4}\s*|\*{2}|_{2})(?:Sources?|References?|Retrieved\s+Legal\s+Sources?):?(?:\*{2}|_{2})?:?\s*\n*[\s\S]*$/gi,
+    ''
+  )
+
+  return text.trim()
+}
+
+function normalizeChatSources(rawSources?: unknown[]): Array<{ label: string; url?: string }> {
+  if (!Array.isArray(rawSources)) return []
+  const seen = new Set<string>()
+  const valid: Array<{ label: string; url?: string }> = []
+
+  for (const item of rawSources) {
+    if (!item) continue
+    let label = ''
+    let url: string | undefined = undefined
+
+    if (typeof item === 'string') {
+      label = item.trim()
+    } else if (typeof item === 'object') {
+      const obj = item as Record<string, unknown>
+      const doc = String(obj.document || obj.source || obj.source_file || '').trim()
+      const sec = String(obj.section || '').trim()
+      const page = obj.page ? `Page ${obj.page}` : ''
+      const parts = [doc, sec, page].filter(Boolean)
+      label = parts.join(' · ')
+      if (typeof obj.source_url === 'string' && obj.source_url) {
+        url = obj.source_url
+      }
+    }
+
+    if (
+      label &&
+      label !== 'undefined' &&
+      label !== 'null' &&
+      label.length > 2 &&
+      !seen.has(label)
+    ) {
+      seen.add(label)
+      valid.push({ label, url })
+    }
+  }
+  return valid
+}
+
+/* =========================================================================
    CHATBOT: Ask IP Shakti
    ========================================================================= */
 function ChatStep({
@@ -1760,7 +1852,7 @@ function ChatStep({
   result: AssessmentResult | null
 }) {
   const [messages, setMessages] = useState<
-    Array<{ role: 'user' | 'assistant'; content: string; sources?: SourceCitation[] }>
+    Array<{ role: 'user' | 'assistant'; content: string; sources?: Array<SourceCitation | string> }>
   >([])
   const [question, setQuestion] = useState('')
   const [busy, setBusy] = useState(false)
@@ -1874,42 +1966,54 @@ function ChatStep({
             </div>
           )}
 
-          {messages.map((message, index) => (
-            <div className={`chat-message ${message.role}`} key={index}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
-                {message.role === 'assistant' ? (
-                  <div className="chat-markdown">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                      {message.content}
-                    </ReactMarkdown>
-                  </div>
-                ) : (
-                  <span style={{ whiteSpace: 'pre-wrap' }}>{message.content}</span>
-                )}
-                {message.sources && message.sources.length > 0 && (
-                  <div className="chat-sources">
-                    <span className="chat-sources-title">RETRIEVED LEGAL SOURCES:</span>
-                    {message.sources.map((src, sIdx) => (
-                      <div key={sIdx} className="chat-source-item">
-                        <strong>{src.document}</strong> {src.section ? `· ${src.section}` : ''}{' '}
-                        {src.page ? `(Page ${src.page})` : ''}
-                        {src.source_url && (
+          {messages.map((message, index) => {
+            const formattedContent =
+              message.role === 'assistant' ? formatChatAnswer(message.content) : message.content
+            const validSources =
+              message.role === 'assistant' ? normalizeChatSources(message.sources) : []
+
+            return (
+              <div className={`chat-message ${message.role}`} key={index}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', width: '100%' }}>
+                  {message.role === 'assistant' ? (
+                    <div className="chat-markdown">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {formattedContent}
+                      </ReactMarkdown>
+                    </div>
+                  ) : (
+                    <span style={{ whiteSpace: 'pre-wrap' }}>{message.content}</span>
+                  )}
+                  {validSources.length > 0 && (
+                    <div className="chat-sources">
+                      <span className="chat-sources-label">
+                        <BookOpen size={10} /> Sources:
+                      </span>
+                      {validSources.map((src, sIdx) =>
+                        src.url ? (
                           <a
-                            href={src.source_url}
+                            key={sIdx}
+                            href={src.url}
                             target="_blank"
                             rel="noreferrer"
-                            style={{ marginLeft: '6px', color: '#174c49' }}
+                            className="chat-source-pill"
+                            title={`Official Source: ${src.label}`}
                           >
-                            Source Link ↗
+                            <span>{src.label}</span>
+                            <ExternalLink size={9} />
                           </a>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
+                        ) : (
+                          <span key={sIdx} className="chat-source-pill">
+                            {src.label}
+                          </span>
+                        )
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
 
           {busy && (
             <div className="chat-message assistant">

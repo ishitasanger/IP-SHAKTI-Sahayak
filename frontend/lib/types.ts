@@ -80,6 +80,9 @@ export type RegulatoryAssessment = {
   general_evidence?: SourceCitation[]
   sources?: SourceCitation[]
   llm_answer?: string
+  findings?: string
+  next_step_content?: string
+  next_steps?: string[]
   disclaimer?: string
   [key: string]: unknown
 }
@@ -90,6 +93,9 @@ export type TKDLAssessment = {
   general_evidence?: SourceCitation[]
   sources?: SourceCitation[]
   llm_answer?: string
+  findings?: string
+  next_step_content?: string
+  next_steps?: string[]
   disclaimer?: string
   [key: string]: unknown
 }
@@ -100,6 +106,9 @@ export type ABSAssessment = {
   general_evidence?: SourceCitation[]
   sources?: SourceCitation[]
   llm_answer?: string
+  findings?: string
+  next_step_content?: string
+  next_steps?: string[]
   disclaimer?: string
   [key: string]: unknown
 }
@@ -109,9 +118,14 @@ export type RoadmapAction = {
   domain: string
   action: string
   action_type: string
+  answer?: string
+  next_steps?: string[]
   evidence?: SourceCitation[]
+  sources?: SourceCitation[]
   human_escalation?: boolean
   query?: string
+  origin?: string
+  [key: string]: unknown
 }
 
 export type Roadmap = {
@@ -154,7 +168,7 @@ export type ChatRequest = {
 
 export type ChatResponse = {
   answer: string
-  sources?: SourceCitation[]
+  sources?: Array<SourceCitation | string>
 }
 
 export type Jurisdiction = {

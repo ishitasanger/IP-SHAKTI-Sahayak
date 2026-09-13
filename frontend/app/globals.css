@@ -42,9 +42,10 @@
 .summary-stat-box{background:#fffdf3;border:1px solid var(--border);border-radius:9px;padding:12px 14px}
 .summary-stat-box span{display:block;font-size:10px;color:var(--muted-foreground);text-transform:uppercase;letter-spacing:.06em}
 .summary-stat-box strong{display:block;font-size:15px;color:var(--foreground);margin-top:4px}
-.chat-sources{margin-top:8px;padding-top:8px;border-top:1px dashed #cbd9c7;display:flex;flex-direction:column;gap:6px}
-.chat-sources-title{font-size:10px;font-weight:700;color:var(--muted-foreground);letter-spacing:.08em}
-.chat-source-item{background:#fdfcf7;border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:10px;color:var(--foreground)}
+.chat-sources{margin-top:10px;display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding-top:6px;border-top:1px solid #ebf2e8}
+.chat-sources-label{font-size:10px;font-weight:700;color:var(--muted-foreground);display:inline-flex;align-items:center;gap:4px;letter-spacing:.04em}
+.chat-source-pill{display:inline-flex;align-items:center;gap:4px;font-size:10px;padding:3px 9px;border-radius:12px;background:#f3f7f1;border:1px solid #d4e5ce;color:#174c49;text-decoration:none;transition:all .15s ease}
+.chat-source-pill:hover{background:#e5f0e1;border-color:#b8d6b0}
 
 /* Markdown message styling in chatbot */
 .chat-message.assistant .chat-markdown{width:100%}
