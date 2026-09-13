@@ -35,6 +35,9 @@ import type {
 } from '@/lib/types'
 import { hasAssessment, normalizeAssessment } from '@/lib/assessment-normalizer'
 
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+
 const logoUrl =
   'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-dhzBUh0TYQLc7qqvRBtpq4moRo1TUQ.png'
 const geoUrl = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'
@@ -70,12 +73,14 @@ const initialInput: WizardInput = {
 
 const stages = [
   'Formulation Input',
+  'Jurisdiction',
   'Classification',
   'IP Screening',
-  'Jurisdiction',
   'Regulatory Assessment',
+  'TKDL Screening',
+  'ABS Screening',
   'Action Roadmap',
-  'Final Summary',
+  'Executive Summary',
 ]
 
 function Brand() {
@@ -518,7 +523,7 @@ function DetailsStep({
             onClick={next}
             disabled={!input.product_name.trim() || !input.intended_use.trim()}
           >
-            Continue to classification <ArrowRight size={17} />
+            Continue to jurisdiction selection <ArrowRight size={17} />
           </button>
         </div>
       </div>
@@ -527,9 +532,10 @@ function DetailsStep({
 }
 
 /* =========================================================================
-   STAGE 2: Classification Step
+   STAGE 3: Guided Classification Step
    ========================================================================= */
 function ClassificationStep({
+  jurisdiction,
   input,
   setInput,
   onSubmit,
@@ -537,6 +543,7 @@ function ClassificationStep({
   error,
   back,
 }: {
+  jurisdiction: Jurisdiction
   input: WizardInput
   setInput: React.Dispatch<React.SetStateAction<WizardInput>>
   onSubmit: () => void
@@ -557,7 +564,7 @@ function ClassificationStep({
   return (
     <div className="analysis-screen page-enter">
       <SectionIntro
-        eyebrow="STEP 02 / GUIDED CLASSIFICATION"
+        eyebrow="STEP 03 / GUIDED CLASSIFICATION"
         title={
           <>
             Identity, <em>heritage & origin.</em>
@@ -565,6 +572,10 @@ function ClassificationStep({
         }
         text="These questions help the backend map your product against TKDL, Biological Diversity Act (ABS), and Patents Act provisions."
       />
+
+      <div style={{ marginBottom: '16px', display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '7px 14px', background: '#e6f3ef', borderRadius: '8px', fontSize: '12px', color: '#174c49', border: '1px solid #cbe5dc' }}>
+        <Globe2 size={15} /> <strong>Active Jurisdiction:</strong> {jurisdiction.name} ({jurisdiction.region})
+      </div>
 
       {loading ? (
         <StateCard
@@ -663,7 +674,7 @@ function ClassificationStep({
 
           <div className="screen-footer">
             <button className="back-button" onClick={back}>
-              <ChevronLeft size={16} /> Back to product details
+              <ChevronLeft size={16} /> Back to jurisdiction selection
             </button>
             <button
               className="continue-button"
@@ -681,7 +692,7 @@ function ClassificationStep({
 }
 
 /* =========================================================================
-   STAGE 3: IP Screening Step
+   STAGE 4: IP Screening Step
    ========================================================================= */
 function IPScreeningStep({
   result,
@@ -701,7 +712,7 @@ function IPScreeningStep({
   return (
     <div className="analysis-screen page-enter">
       <SectionIntro
-        eyebrow="STEP 03 / IP SCREENING"
+        eyebrow="STEP 04 / IP SCREENING"
         title={
           <>
             Intellectual property <em>screening.</em>
@@ -837,10 +848,10 @@ function IPScreeningStep({
 
         <div className="screen-footer">
           <button className="back-button" onClick={back}>
-            <ChevronLeft size={16} /> Back to classification
+            <ChevronLeft size={16} /> Back to guided classification
           </button>
           <button className="continue-button" onClick={next}>
-            Continue to jurisdiction selection <ArrowRight size={17} />
+            Continue to regulatory assessment <ArrowRight size={17} />
           </button>
         </div>
       </div>
@@ -850,7 +861,7 @@ function IPScreeningStep({
 }
 
 /* =========================================================================
-   STAGE 4: Jurisdiction Selection Step
+   STAGE 2: Jurisdiction Selection Step
    ========================================================================= */
 function JurisdictionStep({
   selected,
@@ -872,13 +883,13 @@ function JurisdictionStep({
   return (
     <div className="analysis-screen page-enter">
       <SectionIntro
-        eyebrow="STEP 04 / JURISDICTION CONTEXT"
+        eyebrow="STEP 02 / JURISDICTION CONTEXT"
         title={
           <>
-            Verify your <em>jurisdiction.</em>
+            Select your <em>target jurisdiction.</em>
           </>
         }
-        text="India is the primary regulatory and IP jurisdiction for this analysis. You can also view comparative international frameworks."
+        text="India is the primary regulatory and IP jurisdiction for this analysis. Setting your jurisdiction establishes statutory baseline rules before guided classification and screening."
       />
       <div className="jurisdiction-layout">
         <div className="map-card">
@@ -995,13 +1006,67 @@ function JurisdictionStep({
 
       <div className="screen-footer">
         <button className="back-button" onClick={back}>
-          <ChevronLeft size={16} /> Back to IP screening
+          <ChevronLeft size={16} /> Back to formulation details
         </button>
         <button className="continue-button" onClick={next}>
-          Continue to regulatory assessment <ArrowRight size={17} />
+          Continue to guided classification <ArrowRight size={17} />
         </button>
       </div>
       <Disclaimer />
+    </div>
+  )
+}
+
+function renderChecks(
+  checks?: Record<string, { status: string; evidence?: SourceCitation[]; sources?: SourceCitation[] }>
+) {
+  if (!checks || Object.keys(checks).length === 0) {
+    return (
+      <p style={{ color: 'var(--muted-foreground)', fontSize: '12px' }}>
+        No specific category checks returned.
+      </p>
+    )
+  }
+  return (
+    <div className="cards-grid">
+      {Object.entries(checks).map(([catKey, val]) => {
+        const citations = val.sources && val.sources.length > 0 ? val.sources : (val.evidence || [])
+        const topCitation = citations[0]
+        const isReview =
+          val.status === 'Review' ||
+          val.status?.toLowerCase().includes('required') ||
+          val.status?.toLowerCase().includes('caution') ||
+          val.status?.toLowerCase().includes('applicable')
+        return (
+          <div key={catKey} className="evidence-card">
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '6px',
+              }}
+            >
+              <strong style={{ textTransform: 'capitalize' }}>
+                {catKey.replace(/_/g, ' ')}
+              </strong>
+              <span className={`badge ${isReview ? 'badge-amber' : 'badge-mint'}`}>
+                {val.status}
+              </span>
+            </div>
+            {topCitation ? (
+              <div style={{ fontSize: '10px', color: 'var(--muted-foreground)' }}>
+                {topCitation.document}
+                {topCitation.section ? ` — ${topCitation.section}` : ''}
+              </div>
+            ) : (
+              <div style={{ fontSize: '10px', color: 'var(--muted-foreground)' }}>
+                Standard statutory guidelines apply
+              </div>
+            )}
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -1018,40 +1083,11 @@ function RegulatoryAssessmentStep({
   next: () => void
   back: () => void
 }) {
-  const [activeTab, setActiveTab] = useState<'regulatory' | 'tkdl' | 'abs'>('regulatory')
-
   const reg = result?.regulatory_assessment
-  const tkdl = result?.tkdl_assessment
-  const abs = result?.abs_assessment
-
-  const renderChecks = (checks?: Record<string, { status: string; evidence: SourceCitation[] }>) => {
-    if (!checks || Object.keys(checks).length === 0) {
-      return <p style={{ color: 'var(--muted-foreground)', fontSize: '12px' }}>No specific category checks returned.</p>
-    }
-    return (
-      <div className="cards-grid">
-        {Object.entries(checks).map(([catKey, val]) => (
-          <div key={catKey} className="evidence-card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-              <strong style={{ textTransform: 'capitalize' }}>
-                {catKey.replace(/_/g, ' ')}
-              </strong>
-              <span className={`badge ${val.status === 'Review' ? 'badge-amber' : 'badge-mint'}`}>
-                {val.status}
-              </span>
-            </div>
-            {val.evidence && val.evidence.length > 0 ? (
-              <div style={{ fontSize: '10px', color: 'var(--muted-foreground)' }}>
-                {val.evidence[0].document} {val.evidence[0].section ? `— ${val.evidence[0].section}` : ''}
-              </div>
-            ) : (
-              <div style={{ fontSize: '10px', color: 'var(--muted-foreground)' }}>Standard guidelines apply</div>
-            )}
-          </div>
-        ))}
-      </div>
-    )
-  }
+  const evidenceList =
+    reg?.sources && reg.sources.length > 0
+      ? reg.sources
+      : (reg?.general_evidence || [])
 
   return (
     <div className="analysis-screen page-enter">
@@ -1059,195 +1095,385 @@ function RegulatoryAssessmentStep({
         eyebrow="STEP 05 / REGULATORY ASSESSMENT"
         title={
           <>
-            Compliance, <em>TKDL & ABS.</em>
+            Regulatory <em>compliance & fit check.</em>
           </>
         }
-        text="Review regulatory licensing obligations, Traditional Knowledge Digital Library (TKDL) prior-art barriers, and Access & Benefit Sharing (ABS) mandates."
+        text="Review AYUSH licensing obligations, formulation classification, labeling rules, and Good Manufacturing Practices (GMP) compliance requirements."
       />
 
-      <div className="subtabs">
-        <button
-          className={`subtab-btn ${activeTab === 'regulatory' ? 'active' : ''}`}
-          onClick={() => setActiveTab('regulatory')}
-        >
-          <FileText size={14} /> Regulatory FitCheck
-          {reg?.overall_status && (
-            <span className="badge badge-amber" style={{ marginLeft: '4px' }}>
-              {reg.overall_status}
-            </span>
-          )}
-        </button>
-
-        <button
-          className={`subtab-btn ${activeTab === 'tkdl' ? 'active' : ''}`}
-          onClick={() => setActiveTab('tkdl')}
-        >
-          <BookOpen size={14} /> TKDL Prior-Art
-          {tkdl?.overall_status && (
-            <span className="badge badge-teal" style={{ marginLeft: '4px' }}>
-              {tkdl.overall_status}
-            </span>
-          )}
-        </button>
-
-        <button
-          className={`subtab-btn ${activeTab === 'abs' ? 'active' : ''}`}
-          onClick={() => setActiveTab('abs')}
-        >
-          <Leaf size={14} /> ABS Compliance
-          {abs?.overall_status && (
-            <span className="badge badge-mint" style={{ marginLeft: '4px' }}>
-              {abs.overall_status}
-            </span>
-          )}
-        </button>
-      </div>
-
       <div className="assessment-layout">
-        {/* Tab 1: Regulatory */}
-        {activeTab === 'regulatory' && (
-          <>
-            <div className="domain-card">
-              <div className="domain-header">
-                <h3>Regulatory FitCheck Status</h3>
-                <span className="badge badge-amber">
-                  {reg?.overall_status || 'Review required'}
-                </span>
-              </div>
-              {reg?.llm_answer && (
-                <div className="llm-box">
-                  <strong>
-                    <Sparkles size={14} /> Regulatory Guidance Synthesis
-                  </strong>
+        <div className="domain-card">
+          <div className="domain-header">
+            <h3>Regulatory FitCheck Status</h3>
+            <span
+              className={`badge ${
+                reg?.overall_status?.toLowerCase().includes('fit') ||
+                reg?.overall_status?.toLowerCase().includes('compliant')
+                  ? 'badge-mint'
+                  : 'badge-amber'
+              }`}
+            >
+              {reg?.overall_status || 'Review required'}
+            </span>
+          </div>
+
+          {reg?.llm_answer && (
+            <div className="llm-box" style={{ marginTop: '12px' }}>
+              <strong>
+                <Sparkles size={14} /> Regulatory Guidance Synthesis
+              </strong>
+              <div className="chat-markdown" style={{ marginTop: '8px' }}>
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
                   {reg.llm_answer}
-                </div>
-              )}
-              <div style={{ marginTop: '12px' }}>
-                <span className="evidence-title">Category Requirements Breakdown</span>
-                <div style={{ marginTop: '8px' }}>{renderChecks(reg?.checks)}</div>
+                </ReactMarkdown>
               </div>
             </div>
+          )}
 
-            {reg?.general_evidence && reg.general_evidence.length > 0 && (
-              <div className="domain-card">
-                <div className="domain-header">
-                  <h3>Retrieved Regulatory Evidence</h3>
-                  <span className="badge badge-mint">{reg.general_evidence.length} SOURCES</span>
+          <div style={{ marginTop: '16px' }}>
+            <span className="evidence-title">Category Requirements Breakdown</span>
+            <div style={{ marginTop: '8px' }}>{renderChecks(reg?.checks)}</div>
+          </div>
+        </div>
+
+        {evidenceList.length > 0 && (
+          <div className="domain-card">
+            <div className="domain-header">
+              <h3>Retrieved Regulatory Evidence</h3>
+              <span className="badge badge-mint">{evidenceList.length} CITATIONS</span>
+            </div>
+            <div className="evidence-section">
+              {evidenceList.map((ev, idx) => (
+                <div key={idx} className="evidence-card">
+                  <strong>{ev.document || 'Regulatory Statute'}</strong>
+                  {ev.text && <p style={{ margin: '4px 0', fontSize: '11px' }}>{ev.text}</p>}
+                  <div className="evidence-meta">
+                    {ev.section && <span>Section: {ev.section}</span>}
+                    {ev.page && <span>Page: {ev.page}</span>}
+                    {ev.source_url && (
+                      <a
+                        href={ev.source_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{
+                          color: '#174c49',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '3px',
+                        }}
+                      >
+                        Official Source <ExternalLink size={11} />
+                      </a>
+                    )}
+                  </div>
                 </div>
-                <div className="evidence-section">
-                  {reg.general_evidence.map((ev, idx) => (
-                    <div key={idx} className="evidence-card">
-                      <strong>{ev.document}</strong>
-                      <p style={{ margin: '4px 0' }}>{ev.text}</p>
-                      <div className="evidence-meta">
-                        {ev.section && <span>Section: {ev.section}</span>}
-                        {ev.page && <span>Page: {ev.page}</span>}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </>
+              ))}
+            </div>
+          </div>
         )}
 
-        {/* Tab 2: TKDL */}
-        {activeTab === 'tkdl' && (
-          <>
-            <div className="domain-card">
-              <div className="domain-header">
-                <h3>TKDL Assessment Status</h3>
-                <span className="badge badge-teal">
-                  {tkdl?.overall_status || 'TKDL review required'}
-                </span>
-              </div>
-              {tkdl?.llm_answer && (
-                <div className="llm-box">
-                  <strong>
-                    <Sparkles size={14} /> Traditional Knowledge Synthesis
-                  </strong>
-                  {tkdl.llm_answer}
-                </div>
-              )}
-              <div style={{ marginTop: '12px' }}>
-                <span className="evidence-title">Prior Art & Classical Formulation Checks</span>
-                <div style={{ marginTop: '8px' }}>{renderChecks(tkdl?.checks)}</div>
-              </div>
-            </div>
-
-            {tkdl?.general_evidence && tkdl.general_evidence.length > 0 && (
-              <div className="domain-card">
-                <div className="domain-header">
-                  <h3>TKDL Reference Citations</h3>
-                  <span className="badge badge-mint">{tkdl.general_evidence.length} CITATIONS</span>
-                </div>
-                <div className="evidence-section">
-                  {tkdl.general_evidence.map((ev, idx) => (
-                    <div key={idx} className="evidence-card">
-                      <strong>{ev.document}</strong>
-                      <p style={{ margin: '4px 0' }}>{ev.text}</p>
-                      <div className="evidence-meta">
-                        {ev.section && <span>Section: {ev.section}</span>}
-                        {ev.page && <span>Page: {ev.page}</span>}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </>
-        )}
-
-        {/* Tab 3: ABS */}
-        {activeTab === 'abs' && (
-          <>
-            <div className="domain-card">
-              <div className="domain-header">
-                <h3>Access & Benefit Sharing (ABS) Status</h3>
-                <span className="badge badge-mint">
-                  {abs?.overall_status || 'ABS review required'}
-                </span>
-              </div>
-              {abs?.llm_answer && (
-                <div className="llm-box">
-                  <strong>
-                    <Sparkles size={14} /> Biological Diversity Act Synthesis
-                  </strong>
-                  {abs.llm_answer}
-                </div>
-              )}
-              <div style={{ marginTop: '12px' }}>
-                <span className="evidence-title">Biodiversity Checks & Filings</span>
-                <div style={{ marginTop: '8px' }}>{renderChecks(abs?.checks)}</div>
-              </div>
-            </div>
-
-            {abs?.general_evidence && abs.general_evidence.length > 0 && (
-              <div className="domain-card">
-                <div className="domain-header">
-                  <h3>National Biodiversity Authority Citations</h3>
-                  <span className="badge badge-mint">{abs.general_evidence.length} CITATIONS</span>
-                </div>
-                <div className="evidence-section">
-                  {abs.general_evidence.map((ev, idx) => (
-                    <div key={idx} className="evidence-card">
-                      <strong>{ev.document}</strong>
-                      <p style={{ margin: '4px 0' }}>{ev.text}</p>
-                      <div className="evidence-meta">
-                        {ev.section && <span>Section: {ev.section}</span>}
-                        {ev.page && <span>Page: {ev.page}</span>}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </>
+        {reg?.disclaimer && (
+          <p style={{ fontSize: '11px', color: 'var(--muted-foreground)', fontStyle: 'italic' }}>
+            {reg.disclaimer}
+          </p>
         )}
 
         <div className="screen-footer">
           <button className="back-button" onClick={back}>
-            <ChevronLeft size={16} /> Back to jurisdiction
+            <ChevronLeft size={16} /> Back to IP screening
+          </button>
+          <button className="continue-button" onClick={next}>
+            Continue to TKDL screening <ArrowRight size={17} />
+          </button>
+        </div>
+      </div>
+      <Disclaimer />
+    </div>
+  )
+}
+
+/* =========================================================================
+   STAGE 6: TKDL Screening Step
+   ========================================================================= */
+function TKDLScreeningStep({
+  result,
+  next,
+  back,
+}: {
+  result: AssessmentResult | null
+  next: () => void
+  back: () => void
+}) {
+  const tkdl = result?.tkdl_assessment
+  const evidenceList =
+    tkdl?.sources && tkdl.sources.length > 0
+      ? tkdl.sources
+      : (tkdl?.general_evidence || [])
+  const hasChecks = tkdl?.checks && Object.keys(tkdl.checks).length > 0
+  const hasEvidence = evidenceList.length > 0
+
+  return (
+    <div className="analysis-screen page-enter">
+      <SectionIntro
+        eyebrow="STEP 06 / TKDL SCREENING"
+        title={
+          <>
+            Traditional Knowledge <em>Digital Library (TKDL).</em>
+          </>
+        }
+        text="Evaluation of classical Ayurvedic formulations, prior-art disclosures, and statutory patentability exclusions under Section 3(p) of the Indian Patents Act 1970."
+      />
+
+      <div className="assessment-layout">
+        <div className="domain-card">
+          <div className="domain-header">
+            <h3>TKDL Screening Status</h3>
+            <span className="badge badge-teal">
+              {tkdl?.overall_status || 'Insufficient TKDL evidence'}
+            </span>
+          </div>
+
+          {tkdl?.llm_answer ? (
+            <div className="llm-box" style={{ marginTop: '12px' }}>
+              <strong>
+                <Sparkles size={14} /> Traditional Knowledge Synthesis
+              </strong>
+              <div className="chat-markdown" style={{ marginTop: '8px' }}>
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {tkdl.llm_answer}
+                </ReactMarkdown>
+              </div>
+            </div>
+          ) : null}
+
+          {/* If no evidence or insufficient evidence, display intentional professional empty state */}
+          {!hasEvidence && !hasChecks ? (
+            <div
+              style={{
+                background: '#faf9f5',
+                border: '1px solid var(--border)',
+                borderRadius: '12px',
+                padding: '28px 20px',
+                textAlign: 'center',
+                marginTop: '16px',
+              }}
+            >
+              <BookOpen size={30} style={{ color: '#4a9181', margin: '0 auto 10px' }} />
+              <h4 style={{ fontSize: '16px', margin: '0 0 6px', color: 'var(--foreground)' }}>
+                Insufficient TKDL Evidence Available
+              </h4>
+              <p
+                style={{
+                  color: 'var(--muted-foreground)',
+                  fontSize: '12px',
+                  maxWidth: '560px',
+                  margin: '0 auto 14px',
+                  lineHeight: 1.5,
+                }}
+              >
+                No direct prior-art citations were matched from the Traditional Knowledge Digital Library corpus for this formulation.
+              </p>
+              <div
+                style={{
+                  background: '#fff',
+                  border: '1px solid #e2ddd3',
+                  borderRadius: '8px',
+                  padding: '12px 16px',
+                  maxWidth: '540px',
+                  margin: '0 auto',
+                  textAlign: 'left',
+                  fontSize: '12px',
+                  color: 'var(--foreground)',
+                }}
+              >
+                <strong style={{ display: 'block', marginBottom: '4px' }}>
+                  Section 3(p) Statutory Safeguard:
+                </strong>
+                <span style={{ color: 'var(--muted-foreground)', lineHeight: 1.4 }}>
+                  Under Section 3(p) of the Indian Patents Act 1970, an invention which is traditional knowledge or an aggregation/duplication of known properties of traditionally known component(s) is not patentable. When classical evidence is not indexed in TKDL, independent prior art searches remain advisable for novelty substantiation.
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div style={{ marginTop: '16px' }}>
+              <span className="evidence-title">Prior Art & Classical Checks</span>
+              <div style={{ marginTop: '8px' }}>{renderChecks(tkdl?.checks)}</div>
+            </div>
+          )}
+        </div>
+
+        {hasEvidence && (
+          <div className="domain-card">
+            <div className="domain-header">
+              <h3>TKDL Reference Citations</h3>
+              <span className="badge badge-mint">{evidenceList.length} CITATIONS</span>
+            </div>
+            <div className="evidence-section">
+              {evidenceList.map((ev, idx) => (
+                <div key={idx} className="evidence-card">
+                  <strong>{ev.document || 'TKDL Reference'}</strong>
+                  {ev.text && <p style={{ margin: '4px 0', fontSize: '11px' }}>{ev.text}</p>}
+                  <div className="evidence-meta">
+                    {ev.section && <span>Section: {ev.section}</span>}
+                    {ev.page && <span>Page: {ev.page}</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {tkdl?.disclaimer && (
+          <p style={{ fontSize: '11px', color: 'var(--muted-foreground)', fontStyle: 'italic' }}>
+            {tkdl.disclaimer}
+          </p>
+        )}
+
+        <div className="screen-footer">
+          <button className="back-button" onClick={back}>
+            <ChevronLeft size={16} /> Back to regulatory assessment
+          </button>
+          <button className="continue-button" onClick={next}>
+            Continue to ABS screening <ArrowRight size={17} />
+          </button>
+        </div>
+      </div>
+      <Disclaimer />
+    </div>
+  )
+}
+
+/* =========================================================================
+   STAGE 7: ABS Screening Step
+   ========================================================================= */
+function ABSScreeningStep({
+  input,
+  result,
+  next,
+  back,
+}: {
+  input: WizardInput
+  result: AssessmentResult | null
+  next: () => void
+  back: () => void
+}) {
+  const abs = result?.abs_assessment
+  const evidenceList =
+    abs?.sources && abs.sources.length > 0
+      ? abs.sources
+      : (abs?.general_evidence || [])
+  const hasChecks = abs?.checks && Object.keys(abs.checks).length > 0
+
+  return (
+    <div className="analysis-screen page-enter">
+      <SectionIntro
+        eyebrow="STEP 07 / ABS SCREENING"
+        title={
+          <>
+            Access & Benefit Sharing <em>(ABS) compliance.</em>
+          </>
+        }
+        text="Dedicated screening under the Biological Diversity Act 2002 for commercial utilization of Indian biological resources and prior approvals from the National Biodiversity Authority (NBA)."
+      />
+
+      <div className="assessment-layout">
+        <div className="domain-card">
+          <div className="domain-header">
+            <h3>Access & Benefit Sharing Status</h3>
+            <span
+              className={`badge ${
+                abs?.overall_status?.toLowerCase().includes('exempt')
+                  ? 'badge-teal'
+                  : 'badge-mint'
+              }`}
+            >
+              {abs?.overall_status || 'ABS Review Required'}
+            </span>
+          </div>
+
+          <div
+            style={{
+              marginTop: '6px',
+              fontSize: '12px',
+              color: 'var(--muted-foreground)',
+              padding: '6px 12px',
+              background: '#f6fbf9',
+              borderRadius: '6px',
+              display: 'inline-block',
+            }}
+          >
+            <strong>Declared Biological Resources:</strong>{' '}
+            {input.biological_resources && input.biological_resources.length > 0
+              ? input.biological_resources.join(', ')
+              : input.ingredients.join(', ')}
+          </div>
+
+          {abs?.llm_answer && (
+            <div className="llm-box" style={{ marginTop: '12px' }}>
+              <strong>
+                <Sparkles size={14} /> Biological Diversity Act Synthesis
+              </strong>
+              <div className="chat-markdown" style={{ marginTop: '8px' }}>
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {abs.llm_answer}
+                </ReactMarkdown>
+              </div>
+            </div>
+          )}
+
+          {hasChecks && (
+            <div style={{ marginTop: '16px' }}>
+              <span className="evidence-title">Biological Diversity Compliance Checks</span>
+              <div style={{ marginTop: '8px' }}>{renderChecks(abs?.checks)}</div>
+            </div>
+          )}
+        </div>
+
+        {evidenceList.length > 0 && (
+          <div className="domain-card">
+            <div className="domain-header">
+              <h3>National Biodiversity Authority Citations</h3>
+              <span className="badge badge-mint">{evidenceList.length} CITATIONS</span>
+            </div>
+            <div className="evidence-section">
+              {evidenceList.map((ev, idx) => (
+                <div key={idx} className="evidence-card">
+                  <strong>{ev.document || 'Biological Diversity Act Reference'}</strong>
+                  {ev.text && <p style={{ margin: '4px 0', fontSize: '11px' }}>{ev.text}</p>}
+                  <div className="evidence-meta">
+                    {ev.section && <span>Section: {ev.section}</span>}
+                    {ev.page && <span>Page: {ev.page}</span>}
+                    {ev.source_url && (
+                      <a
+                        href={ev.source_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{
+                          color: '#174c49',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '3px',
+                        }}
+                      >
+                        Official Source <ExternalLink size={11} />
+                      </a>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {abs?.disclaimer && (
+          <p style={{ fontSize: '11px', color: 'var(--muted-foreground)', fontStyle: 'italic' }}>
+            {abs.disclaimer}
+          </p>
+        )}
+
+        <div className="screen-footer">
+          <button className="back-button" onClick={back}>
+            <ChevronLeft size={16} /> Back to TKDL screening
           </button>
           <button className="continue-button" onClick={next}>
             Continue to action roadmap <ArrowRight size={17} />
@@ -1260,7 +1486,7 @@ function RegulatoryAssessmentStep({
 }
 
 /* =========================================================================
-   STAGE 6: Action Roadmap Step
+   STAGE 8: Action Roadmap Step
    ========================================================================= */
 function RoadmapStep({
   result,
@@ -1277,7 +1503,7 @@ function RoadmapStep({
   return (
     <div className="analysis-screen page-enter">
       <SectionIntro
-        eyebrow="STEP 06 / ACTION ROADMAP"
+        eyebrow="STEP 08 / ACTION ROADMAP"
         title={
           <>
             Actionable guidance & <em>filing pathways.</em>
@@ -1349,7 +1575,7 @@ function RoadmapStep({
 
         <div className="screen-footer">
           <button className="back-button" onClick={back}>
-            <ChevronLeft size={16} /> Back to regulatory assessment
+            <ChevronLeft size={16} /> Back to ABS screening
           </button>
           <button className="continue-button" onClick={next}>
             View final executive summary <ArrowRight size={17} />
@@ -1362,7 +1588,7 @@ function RoadmapStep({
 }
 
 /* =========================================================================
-   STAGE 7: Final Summary Step
+   STAGE 9: Final Executive Summary Step
    ========================================================================= */
 function FinalSummaryStep({
   input,
@@ -1388,7 +1614,7 @@ function FinalSummaryStep({
   return (
     <div className="analysis-screen page-enter">
       <SectionIntro
-        eyebrow="STEP 07 / EXECUTIVE SUMMARY"
+        eyebrow="STEP 09 / EXECUTIVE SUMMARY"
         title={
           <>
             Assessment <em>synthesis.</em>
@@ -1651,7 +1877,15 @@ function ChatStep({
           {messages.map((message, index) => (
             <div className={`chat-message ${message.role}`} key={index}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
-                <span>{message.content}</span>
+                {message.role === 'assistant' ? (
+                  <div className="chat-markdown">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {message.content}
+                    </ReactMarkdown>
+                  </div>
+                ) : (
+                  <span style={{ whiteSpace: 'pre-wrap' }}>{message.content}</span>
+                )}
                 {message.sources && message.sources.length > 0 && (
                   <div className="chat-sources">
                     <span className="chat-sources-title">RETRIEVED LEGAL SOURCES:</span>
@@ -1877,7 +2111,7 @@ function Dashboard({ start }: { start: () => void }) {
         <div className="empty-history">
           <Leaf size={18} />
           <p>
-            The analysis follows the 7-step guided journey: Formulation Input → Classification → IP Screening → Jurisdiction → Regulatory Assessment → Action Roadmap → Final Summary.
+            The analysis follows the 9-step guided journey: Formulation Input → Jurisdiction → Classification → IP Screening → Regulatory Assessment → TKDL Screening → ABS Screening → Action Roadmap → Final Summary.
           </p>
         </div>
       </section>
@@ -1887,7 +2121,7 @@ function Dashboard({ start }: { start: () => void }) {
         <div>
           <strong>How IP Shakti works</strong>
           <span>
-            1. Enter formulation details · 2. Classify heritage & bio-resources · 3. Receive multi-domain legal report · 4. Follow prioritized action roadmap · 5. Query the grounded chatbot
+            1. Enter formulation details · 2. Select target jurisdiction · 3. Classify heritage & bio-resources · 4. IP screening · 5. Regulatory FitCheck · 6. TKDL prior art · 7. ABS screening · 8. Action roadmap · 9. Executive summary & chatbot
           </span>
         </div>
       </div>
@@ -1904,15 +2138,17 @@ export default function Page() {
   const [activeNav, setActiveNav] = useState('Dashboard')
   // stage 0: Dashboard
   // stage 1: Formulation Input
-  // stage 2: Classification
-  // stage 3: IP Screening
-  // stage 4: Jurisdiction Selection
+  // stage 2: Jurisdiction Selection
+  // stage 3: Guided Classification
+  // stage 4: IP Screening
   // stage 5: Regulatory Assessment
-  // stage 6: Action Roadmap
-  // stage 7: Final Summary
-  // stage 8: ChatStep (Ask IP Shakti)
-  // stage 9: Workspace History
-  // stage 10: Knowledge Base
+  // stage 6: TKDL Screening
+  // stage 7: ABS Screening
+  // stage 8: Action Roadmap
+  // stage 9: Final Executive Summary
+  // stage 10: ChatStep (Ask IP Shakti)
+  // stage 11: Workspace History
+  // stage 12: Knowledge Base
   const [stage, setStage] = useState(0)
 
   const [jurisdiction, setJurisdiction] = useState(jurisdictions[0])
@@ -1984,8 +2220,8 @@ export default function Page() {
         /* storage may be restricted */
       }
 
-      // Automatically transition to Stage 3: IP Screening
-      setStage(3)
+      // Automatically transition to Stage 4: IP Screening
+      setStage(4)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Unable to submit assessment')
     } finally {
@@ -1997,9 +2233,9 @@ export default function Page() {
     setActiveNav(value)
     if (value === 'Dashboard') setStage(0)
     else if (value === 'New Assessment') setStage(1)
-    else if (value === 'Ask IP Shakti') setStage(8)
-    else if (value === 'My Analyses') setStage(9)
-    else if (value === 'Knowledge Base') setStage(10)
+    else if (value === 'Ask IP Shakti') setStage(10)
+    else if (value === 'My Analyses') setStage(11)
+    else if (value === 'Knowledge Base') setStage(12)
     else setStage(0)
   }
 
@@ -2017,28 +2253,32 @@ export default function Page() {
     )
   } else if (stage === 2) {
     screen = (
-      <ClassificationStep
-        input={input}
-        setInput={setInput}
-        onSubmit={submit}
-        loading={loading}
-        error={error}
+      <JurisdictionStep
+        selected={jurisdiction}
+        setSelected={(j) => {
+          setJurisdiction(j)
+          setInput((prev) => ({ ...prev, jurisdiction: j.name }))
+        }}
+        next={() => setStage(3)}
         back={() => setStage(1)}
       />
     )
   } else if (stage === 3) {
     screen = (
-      <IPScreeningStep
-        result={result}
-        next={() => setStage(4)}
+      <ClassificationStep
+        jurisdiction={jurisdiction}
+        input={input}
+        setInput={setInput}
+        onSubmit={submit}
+        loading={loading}
+        error={error}
         back={() => setStage(2)}
       />
     )
   } else if (stage === 4) {
     screen = (
-      <JurisdictionStep
-        selected={jurisdiction}
-        setSelected={setJurisdiction}
+      <IPScreeningStep
+        result={result}
         next={() => setStage(5)}
         back={() => setStage(3)}
       />
@@ -2053,7 +2293,7 @@ export default function Page() {
     )
   } else if (stage === 6) {
     screen = (
-      <RoadmapStep
+      <TKDLScreeningStep
         result={result}
         next={() => setStage(7)}
         back={() => setStage(5)}
@@ -2061,23 +2301,40 @@ export default function Page() {
     )
   } else if (stage === 7) {
     screen = (
+      <ABSScreeningStep
+        input={input}
+        result={result}
+        next={() => setStage(8)}
+        back={() => setStage(6)}
+      />
+    )
+  } else if (stage === 8) {
+    screen = (
+      <RoadmapStep
+        result={result}
+        next={() => setStage(9)}
+        back={() => setStage(7)}
+      />
+    )
+  } else if (stage === 9) {
+    screen = (
       <FinalSummaryStep
         input={input}
         jurisdiction={jurisdiction}
         result={result}
         onOpenChat={() => {
           setActiveNav('Ask IP Shakti')
-          setStage(8)
+          setStage(10)
         }}
         onRestart={() => {
           setInput(initialInput)
           setResult(null)
           setStage(1)
         }}
-        back={() => setStage(6)}
+        back={() => setStage(8)}
       />
     )
-  } else if (stage === 8) {
+  } else if (stage === 10) {
     screen = (
       <ChatStep
         jurisdiction={jurisdiction}
@@ -2085,14 +2342,14 @@ export default function Page() {
         result={result}
       />
     )
-  } else if (stage === 9) {
+  } else if (stage === 11) {
     screen = <WorkspaceHistory onResume={start} />
-  } else if (stage === 10) {
+  } else if (stage === 12) {
     screen = <KnowledgeBase />
   }
 
-  // Active stepper calculation (for stages 1 to 7)
-  const currentStepIndex = stage >= 1 && stage <= 7 ? stage - 1 : -1
+  // Active stepper calculation (for stages 1 to 9)
+  const currentStepIndex = stage >= 1 && stage <= 9 ? stage - 1 : -1
 
   return (
     <main className="app-shell">

@@ -70,12 +70,15 @@ export type IPAssessment = {
 export type CheckItem = {
   status: string
   evidence: SourceCitation[]
+  sources?: SourceCitation[]
+  [key: string]: unknown
 }
 
 export type RegulatoryAssessment = {
   overall_status?: string
   checks?: Record<string, CheckItem>
   general_evidence?: SourceCitation[]
+  sources?: SourceCitation[]
   llm_answer?: string
   disclaimer?: string
   [key: string]: unknown
@@ -85,6 +88,7 @@ export type TKDLAssessment = {
   overall_status?: string
   checks?: Record<string, CheckItem>
   general_evidence?: SourceCitation[]
+  sources?: SourceCitation[]
   llm_answer?: string
   disclaimer?: string
   [key: string]: unknown
@@ -94,6 +98,7 @@ export type ABSAssessment = {
   overall_status?: string
   checks?: Record<string, CheckItem>
   general_evidence?: SourceCitation[]
+  sources?: SourceCitation[]
   llm_answer?: string
   disclaimer?: string
   [key: string]: unknown

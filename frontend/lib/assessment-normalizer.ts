@@ -94,9 +94,11 @@ function normalizeChecks(checks: unknown): Record<string, CheckItem> | undefined
   for (const [key, val] of Object.entries(checks as Record<string, unknown>)) {
     if (val && typeof val === 'object') {
       const item = val as Record<string, unknown>
+      const citations = normalizeEvidence(item.sources || item.evidence)
       result[key] = {
         status: String(item.status || 'Review'),
-        evidence: normalizeEvidence(item.evidence),
+        evidence: citations,
+        sources: citations,
       }
     }
   }
@@ -106,11 +108,13 @@ function normalizeChecks(checks: unknown): Record<string, CheckItem> | undefined
 function normalizeRegulatoryAssessment(reg: unknown): RegulatoryAssessment | undefined {
   if (!reg || typeof reg !== 'object') return undefined
   const raw = reg as Record<string, unknown>
+  const citations = normalizeEvidence(raw.sources || raw.general_evidence)
   return {
     ...raw,
     overall_status: typeof raw.overall_status === 'string' ? raw.overall_status : undefined,
     checks: normalizeChecks(raw.checks),
-    general_evidence: normalizeEvidence(raw.general_evidence),
+    general_evidence: citations,
+    sources: citations,
     llm_answer: typeof raw.llm_answer === 'string' ? raw.llm_answer : undefined,
     disclaimer: typeof raw.disclaimer === 'string' ? raw.disclaimer : undefined,
   }
@@ -119,11 +123,13 @@ function normalizeRegulatoryAssessment(reg: unknown): RegulatoryAssessment | und
 function normalizeTkdlAssessment(tkdl: unknown): TKDLAssessment | undefined {
   if (!tkdl || typeof tkdl !== 'object') return undefined
   const raw = tkdl as Record<string, unknown>
+  const citations = normalizeEvidence(raw.sources || raw.general_evidence)
   return {
     ...raw,
     overall_status: typeof raw.overall_status === 'string' ? raw.overall_status : undefined,
     checks: normalizeChecks(raw.checks),
-    general_evidence: normalizeEvidence(raw.general_evidence),
+    general_evidence: citations,
+    sources: citations,
     llm_answer: typeof raw.llm_answer === 'string' ? raw.llm_answer : undefined,
     disclaimer: typeof raw.disclaimer === 'string' ? raw.disclaimer : undefined,
   }
@@ -132,11 +138,13 @@ function normalizeTkdlAssessment(tkdl: unknown): TKDLAssessment | undefined {
 function normalizeAbsAssessment(abs: unknown): ABSAssessment | undefined {
   if (!abs || typeof abs !== 'object') return undefined
   const raw = abs as Record<string, unknown>
+  const citations = normalizeEvidence(raw.sources || raw.general_evidence)
   return {
     ...raw,
     overall_status: typeof raw.overall_status === 'string' ? raw.overall_status : undefined,
     checks: normalizeChecks(raw.checks),
-    general_evidence: normalizeEvidence(raw.general_evidence),
+    general_evidence: citations,
+    sources: citations,
     llm_answer: typeof raw.llm_answer === 'string' ? raw.llm_answer : undefined,
     disclaimer: typeof raw.disclaimer === 'string' ? raw.disclaimer : undefined,
   }
