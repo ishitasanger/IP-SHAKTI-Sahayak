@@ -5,23 +5,61 @@ from ..LLM.answer_generator import AnswerGenerator
 class ABSCheck:
 
     def __init__(self):
+
         self.rag = RAGEngine()
         self.answer_generator = AnswerGenerator()
 
+    # --------------------------------------------------
+    # USER-FACING CITATION
+    # --------------------------------------------------
+
     @staticmethod
     def map_citation(result):
+        """
+        Frontend-facing source information.
+
+        Retrieved text is NOT exposed.
+        """
+
         return {
             "document": result.document,
             "section": result.section,
             "page": result.page,
             "source_file": result.source_file,
             "source_url": result.metadata.get("source_url"),
-            "text": result.text
         }
 
-    def retrieve_evidence(self, product_context, query=None, top_k=5):
+    # --------------------------------------------------
+    # INTERNAL EVIDENCE
+    # --------------------------------------------------
 
-        results = self.rag.search(
+    @staticmethod
+    def map_evidence(result):
+        """
+        Internal evidence representation used by the LLM.
+        """
+
+        return {
+            "document": result.document,
+            "section": result.section,
+            "page": result.page,
+            "source_file": result.source_file,
+            "source_url": result.metadata.get("source_url"),
+            "text": result.text,
+        }
+
+    # --------------------------------------------------
+    # RAG RETRIEVAL
+    # --------------------------------------------------
+
+    def retrieve_evidence(
+        self,
+        product_context,
+        query=None,
+        top_k=5
+    ):
+
+        return self.rag.search(
             query=query,
             context=product_context,
             filters={
@@ -30,7 +68,9 @@ class ABSCheck:
             top_k=top_k
         )
 
-        return results
+    # --------------------------------------------------
+    # STATUS
+    # --------------------------------------------------
 
     @staticmethod
     def determine_status(evidence):
@@ -40,13 +80,24 @@ class ABSCheck:
 
         return "Review"
 
+    # --------------------------------------------------
+    # MAIN ASSESSMENT
+    # --------------------------------------------------
+
     def assess(self, product_context):
 
-        # General ABS evidence
+        # --------------------------------------------------
+        # 1. General ABS evidence
+        # --------------------------------------------------
+
         general_results = self.retrieve_evidence(
             product_context=product_context,
             top_k=5
         )
+
+        # --------------------------------------------------
+        # 2. ABS categories
+        # --------------------------------------------------
 
         categories = {
 
@@ -77,25 +128,116 @@ class ABSCheck:
 
         checks = {}
 
+        # --------------------------------------------------
+        # 3. Category evidence
+        # --------------------------------------------------
+
         for category, category_query in categories.items():
 
             results = self.retrieve_evidence(
                 product_context=product_context,
                 query=category_query,
-                top_k=3
+                top_k=2
             )
 
             checks[category] = {
-                "status": self.determine_status(results),
 
+                "status":
+                    self.determine_status(results),
+
+                # INTERNAL
                 "evidence": [
+                    self.map_evidence(result)
+                    for result in results
+                ],
+
+                # FRONTEND
+                "sources": [
                     self.map_citation(result)
                     for result in results
                 ]
             }
 
-        # Prepare ABS result
-        result = {
+        # --------------------------------------------------
+        # 4. Prepare compact LLM input
+        # --------------------------------------------------
+
+        llm_result = {
+
+            "checks": checks,
+
+            "general_evidence": [
+                self.map_evidence(result)
+                for result in general_results[:2]
+            ]
+        }
+
+        # --------------------------------------------------
+        # 5. Generate ABS explanation
+        # --------------------------------------------------
+
+        llm_answer = (
+            self.answer_generator.generate_abs_answer(
+                product_context,
+                llm_result
+            )
+        )
+
+        # --------------------------------------------------
+        # 6. Collect clean sources
+        # --------------------------------------------------
+
+        sources = []
+
+        for check in checks.values():
+
+            for source in check["sources"]:
+
+                key = (
+                    source.get("document"),
+                    source.get("section"),
+                    source.get("page")
+                )
+
+                existing_keys = [
+                    (
+                        s.get("document"),
+                        s.get("section"),
+                        s.get("page")
+                    )
+                    for s in sources
+                ]
+
+                if key not in existing_keys:
+                    sources.append(source)
+
+        for result in general_results[:2]:
+
+            source = self.map_citation(result)
+
+            key = (
+                source.get("document"),
+                source.get("section"),
+                source.get("page")
+            )
+
+            existing_keys = [
+                (
+                    s.get("document"),
+                    s.get("section"),
+                    s.get("page")
+                )
+                for s in sources
+            ]
+
+            if key not in existing_keys:
+                sources.append(source)
+
+        # --------------------------------------------------
+        # 7. Final USER-FACING result
+        # --------------------------------------------------
+
+        return {
 
             "product_context": product_context,
 
@@ -105,12 +247,17 @@ class ABSCheck:
                 else "Insufficient ABS evidence"
             ),
 
-            "checks": checks,
+            "checks": {
+                category: {
+                    "status": check["status"],
+                    "sources": check["sources"]
+                }
+                for category, check in checks.items()
+            },
 
-            "general_evidence": [
-                self.map_citation(result)
-                for result in general_results
-            ],
+            "llm_answer": llm_answer,
+
+            "sources": sources,
 
             "disclaimer": (
                 "This ABS Check provides information based on "
@@ -121,19 +268,11 @@ class ABSCheck:
             )
         }
 
-        # Generate final explanation using Groq LLM
-        result["llm_answer"] = (
-            self.answer_generator.generate_regulatory_answer(
-                product_context,
-                result
-            )
-        )
-
-        return result
-
 
 def abs_check(product_context):
 
     checker = ABSCheck()
 
-    return checker.assess(product_context)
+    return checker.assess(
+        product_context
+    )

@@ -5,12 +5,6 @@ from ..LLM.answer_generator import AnswerGenerator
 class RegulatoryFitCheck:
 
     def __init__(self):
-        """
-        Initialize the existing RAG engine.
-
-        Regulatory FitCheck does NOT modify the RAG pipeline.
-        It only uses RAGEngine.search().
-        """
 
         self.rag = RAGEngine()
         self.answer_generator = AnswerGenerator()
@@ -22,7 +16,9 @@ class RegulatoryFitCheck:
     @staticmethod
     def map_citation(result):
         """
-        Convert a RAGResult into a frontend-friendly citation.
+        Convert a RAGResult into frontend-friendly source metadata.
+
+        Retrieved text is intentionally NOT returned.
         """
 
         return {
@@ -31,7 +27,27 @@ class RegulatoryFitCheck:
             "page": result.page,
             "source_file": result.source_file,
             "source_url": result.metadata.get("source_url"),
-            "text": result.text
+        }
+
+    # --------------------------------------------------
+    # Internal evidence mapping
+    # --------------------------------------------------
+
+    @staticmethod
+    def map_evidence(result):
+        """
+        Internal representation used by the LLM.
+
+        This is NOT intended for frontend output.
+        """
+
+        return {
+            "document": result.document,
+            "section": result.section,
+            "page": result.page,
+            "source_file": result.source_file,
+            "source_url": result.metadata.get("source_url"),
+            "text": result.text,
         }
 
     # --------------------------------------------------
@@ -44,18 +60,8 @@ class RegulatoryFitCheck:
         query=None,
         top_k=5
     ):
-        """
-        Retrieve regulatory evidence from the existing RAG.
 
-        IMPORTANT:
-        This module explicitly chooses:
-
-            domain = regulatory
-
-        RAG does not decide the domain.
-        """
-
-        results = self.rag.search(
+        return self.rag.search(
             query=query,
             context=product_context,
             filters={
@@ -64,23 +70,12 @@ class RegulatoryFitCheck:
             top_k=top_k
         )
 
-        return results
-
     # --------------------------------------------------
-    # Basic status determination
+    # Status
     # --------------------------------------------------
 
     @staticmethod
     def determine_status(evidence):
-        """
-        Basic evidence-based status.
-
-        This is intentionally simple for the prototype.
-
-        The status does NOT claim that the product is legally
-        compliant. It only indicates whether regulatory
-        evidence was found for the check.
-        """
 
         if not evidence:
             return "Attention"
@@ -88,92 +83,176 @@ class RegulatoryFitCheck:
         return "Review"
 
     # --------------------------------------------------
-    # Main Regulatory FitCheck
+    # Main assessment
     # --------------------------------------------------
 
     def assess(self, product_context):
-        """
-        Perform the Regulatory FitCheck.
 
-        product_context can come directly from the frontend
-        today.
-
-        Later, the Classification Wizard can provide the same
-        structure automatically.
-        """
-
-        # ----------------------------------------------
-        # 1. Retrieve general regulatory evidence
-        # ----------------------------------------------
+        # --------------------------------------------------
+        # 1. General regulatory evidence
+        # --------------------------------------------------
 
         general_results = self.retrieve_evidence(
             product_context=product_context,
             top_k=5
         )
 
-        # ----------------------------------------------
+        # --------------------------------------------------
         # 2. Regulatory categories
-        # ----------------------------------------------
+        # --------------------------------------------------
 
         categories = {
-            "licensing": "licensing and registration requirements",
 
-            "labelling": "labelling and packaging requirements",
+            "licensing":
+                "licensing and registration requirements",
 
-            "safety": "safety, quality and testing requirements",
+            "labelling":
+                "labelling and packaging requirements",
 
-            "gmp": "Good Manufacturing Practices GMP requirements",
+            "safety":
+                "safety quality and testing requirements",
 
-            "claims": "claims, advertising and disease treatment claims",
+            "gmp":
+                "Good Manufacturing Practices GMP requirements",
 
-            "applicable_regulations": (
-                "applicable regulations, rules, standards "
-                "and regulatory framework"
-            )
+            "claims":
+                "claims advertising and disease treatment claims",
+
+            "applicable_regulations":
+                "applicable regulations rules standards and regulatory framework"
         }
 
         checks = {}
 
-        # ----------------------------------------------
-        # 3. Retrieve evidence for each category
-        # ----------------------------------------------
+        # --------------------------------------------------
+        # 3. Category evidence
+        # --------------------------------------------------
 
         for category, category_query in categories.items():
 
             results = self.retrieve_evidence(
                 product_context=product_context,
                 query=category_query,
-                top_k=3
+                top_k=2
             )
 
             checks[category] = {
-                "status": self.determine_status(results),
 
+                "status":
+                    self.determine_status(results),
+
+                # INTERNAL evidence.
+                # Used by AnswerGenerator.
                 "evidence": [
+                    self.map_evidence(result)
+                    for result in results
+                ],
+
+                # USER-FACING sources.
+                "sources": [
                     self.map_citation(result)
                     for result in results
                 ]
             }
 
-        # ----------------------------------------------
-        # 4. Overall result
-        # ----------------------------------------------
+        # --------------------------------------------------
+        # 4. Prepare internal result for LLM
+        # --------------------------------------------------
 
-        result = {
+        llm_result = {
+
+            "checks": checks,
+
+            "general_evidence": [
+                self.map_evidence(result)
+                for result in general_results[:2]
+            ]
+        }
+
+        # --------------------------------------------------
+        # 5. Generate LLM answer
+        # --------------------------------------------------
+
+        llm_answer = (
+            self.answer_generator.generate_regulatory_answer(
+                product_context,
+                llm_result
+            )
+        )
+
+        # --------------------------------------------------
+        # 6. User-facing sources
+        # --------------------------------------------------
+
+        sources = []
+
+        for check in checks.values():
+
+            for source in check["sources"]:
+
+                key = (
+                    source.get("document"),
+                    source.get("section"),
+                    source.get("page")
+                )
+
+                if key not in [
+                    (
+                        s.get("document"),
+                        s.get("section"),
+                        s.get("page")
+                    )
+                    for s in sources
+                ]:
+                    sources.append(source)
+
+        for result in general_results[:2]:
+
+            source = self.map_citation(result)
+
+            key = (
+                source.get("document"),
+                source.get("section"),
+                source.get("page")
+            )
+
+            if key not in [
+                (
+                    s.get("document"),
+                    s.get("section"),
+                    s.get("page")
+                )
+                for s in sources
+            ]:
+                sources.append(source)
+
+        # --------------------------------------------------
+        # 7. Final USER-FACING result
+        # --------------------------------------------------
+
+        return {
+
             "product_context": product_context,
 
             "overall_status": (
                 "Review required"
                 if general_results
-                else "Insufficient evidence"
+                else "Insufficient regulatory evidence"
             ),
 
-            "checks": checks,
+            # Each category keeps status + clean sources.
+            # Raw text is NOT returned.
+            "checks": {
+                category: {
+                    "status": check["status"],
+                    "sources": check["sources"]
+                }
+                for category, check in checks.items()
+            },
 
-            "general_evidence": [
-                self.map_citation(result)
-                for result in general_results
-            ],
+            "llm_answer": llm_answer,
+
+            "sources": sources,
 
             "disclaimer": (
                 "This Regulatory FitCheck provides "
@@ -182,32 +261,8 @@ class RegulatoryFitCheck:
             )
         }
 
-        # ----------------------------------------------
-        # 5. Generate final explanation using Groq LLM
-        # ----------------------------------------------
-
-        result["llm_answer"] = (
-            self.answer_generator.generate_regulatory_answer(
-                product_context,
-                result
-            )
-        )
-
-        return result
-
-
-# ------------------------------------------------------
-# Convenience function
-# ------------------------------------------------------
 
 def regulatory_fitcheck(product_context):
-    """
-    Simple function that teammates can call.
-
-    Example:
-
-        result = regulatory_fitcheck(product_context)
-    """
 
     fitcheck = RegulatoryFitCheck()
 

@@ -1,18 +1,18 @@
 from typing import Any, Dict, List
 
 from ..rag.rag_engine import RAGEngine
+from ..LLM.answer_generator import AnswerGenerator
 
 
 class RoadmapGenerator:
     """
-    Generates an actionable roadmap from the assessment results.
+    Generates an actionable roadmap from assessment results.
 
-    The roadmap does NOT hardcode legal/procedural information.
-    It identifies the required action pathway, retrieves relevant
-    procedural evidence through RAG, and returns grounded actions.
+    The roadmap identifies the required action pathway, retrieves
+    procedural evidence through RAG, and uses an LLM to generate
+    concise, grounded next steps.
     """
 
-    # These are retrieval intents, NOT legal answers.
     ACTION_PATHWAYS = {
         "patent": {
             "action": "Patent filing",
@@ -77,10 +77,11 @@ class RoadmapGenerator:
 
     def __init__(self, top_k: int = 5):
         self.rag = RAGEngine()
+        self.answer_generator = AnswerGenerator()
         self.top_k = top_k
 
     # ---------------------------------------------------------
-    # 1. Identify required actions from assessment results
+    # 1. Identify required actions
     # ---------------------------------------------------------
 
     def identify_actions(
@@ -184,7 +185,7 @@ class RoadmapGenerator:
         }
 
     # ---------------------------------------------------------
-    # 3. Retrieve procedural evidence from RAG
+    # 3. Retrieve procedural evidence
     # ---------------------------------------------------------
 
     def retrieve_action_evidence(
@@ -213,9 +214,7 @@ class RoadmapGenerator:
                     "section": result.section,
                     "page": result.page,
                     "source_file": result.source_file,
-                    "source_url": result.metadata.get(
-                        "source_url"
-                    ),
+                    "source_url": result.metadata.get("source_url"),
                     "text": result.text,
                     "score": result.score,
                 }
@@ -224,7 +223,56 @@ class RoadmapGenerator:
         return evidence
 
     # ---------------------------------------------------------
-    # 4. Generate roadmap
+    # 4. Generate grounded roadmap answer
+    # ---------------------------------------------------------
+
+    def generate_action_answer(
+        self,
+        action: Dict[str, Any],
+        evidence: List[Dict[str, Any]]
+    ) -> str:
+
+        # Keep the LLM context compact.
+        llm_evidence = [
+            {
+                "document": item.get("document"),
+                "section": item.get("section"),
+                "page": item.get("page"),
+                "text": item.get("text", "")[:1500],
+            }
+            for item in evidence[:3]
+        ]
+
+        return self.answer_generator.generate_roadmap_answer(
+            action=action,
+            evidence=llm_evidence,
+        )
+
+    # ---------------------------------------------------------
+    # 5. Convert evidence into frontend-safe sources
+    # ---------------------------------------------------------
+
+    @staticmethod
+    def _map_sources(
+        evidence: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
+
+        sources = []
+
+        for item in evidence:
+            sources.append(
+                {
+                    "document": item.get("document"),
+                    "section": item.get("section"),
+                    "page": item.get("page"),
+                    "source_url": item.get("source_url"),
+                }
+            )
+
+        return sources
+
+    # ---------------------------------------------------------
+    # 6. Generate roadmap
     # ---------------------------------------------------------
 
     def generate(
@@ -246,7 +294,14 @@ class RoadmapGenerator:
 
         for action in actions:
 
+            # Full evidence remains internal.
             evidence = self.retrieve_action_evidence(action)
+
+            # Generate grounded action explanation.
+            answer = self.generate_action_answer(
+                action=action,
+                evidence=evidence,
+            )
 
             roadmap_actions.append(
                 {
@@ -254,7 +309,8 @@ class RoadmapGenerator:
                     "domain": action["domain"],
                     "action": action["action"],
                     "action_type": action["action_type"],
-                    "evidence": evidence,
+                    "answer": answer,
+                    "sources": self._map_sources(evidence),
                     "human_escalation": self._needs_human_escalation(
                         action,
                         evidence
@@ -324,12 +380,9 @@ class RoadmapGenerator:
         evidence: List[Dict[str, Any]]
     ) -> bool:
 
-        # No reliable procedural evidence → human review.
         if not evidence:
             return True
 
-        # Patent/TK/ABS decisions can require professional review
-        # when evidence is insufficient or interpretation is needed.
         if action["action_type"] in {
             "patent_filing",
             "tk_prior_art",

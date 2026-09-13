@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from ..Classification.classifier_wizard import ProductContext
 from ..rag.rag_engine import RAGEngine
@@ -6,7 +6,14 @@ from ..rag.rag_engine import RAGEngine
 
 class IPScreeningResult:
     """
-    Structured result returned by the IP and legal relevance checker.
+    Structured result returned by the IP relevance checker.
+
+    The IP module is responsible only for identifying potentially
+    relevant IP protection domains and retrieving supporting
+    IP-related evidence from the IP RAG knowledge base.
+
+    It does not perform a comprehensive search of official
+    patent, trademark or design registries.
     """
 
     def __init__(
@@ -22,22 +29,60 @@ class IPScreeningResult:
     ):
         self.product_name = product_name
         self.relevant_ip_domains = relevant_ip_domains
+
+        # Internal RAG/debugging information.
         self.search_queries = search_queries
+
+        # Full retrieved evidence is kept internally.
         self.legal_evidence = legal_evidence
+
         self.evidence_count = len(legal_evidence)
+
         self.legal_considerations = legal_considerations
         self.screening_status = screening_status
         self.summary = summary
         self.disclaimer = disclaimer
 
     def to_dict(self) -> Dict[str, Any]:
+        """
+        Return only user-facing information.
+
+        Raw retrieved text, similarity scores and search queries
+        are NOT exposed to the frontend.
+
+        legal_evidence is converted into a clean list of
+        source citations.
+        """
+
+        sources = []
+
+        for item in self.legal_evidence:
+
+            source = (
+                item.get("source")
+                or item.get("document")
+                or "Unknown source"
+            )
+
+            section = item.get("section")
+            page = item.get("page")
+
+            citation = str(source)
+
+            if section and section != "Not specified":
+                citation += f" — {section}"
+
+            if page:
+                citation += f", Page {page}"
+
+            if citation not in sources:
+                sources.append(citation)
 
         return {
             "product_name": self.product_name,
             "relevant_ip_domains": self.relevant_ip_domains,
-            "search_queries": self.search_queries,
-            "legal_evidence": self.legal_evidence,
-            "evidence_count": self.evidence_count,
+            "legal_evidence": sources,
+            "evidence_count": len(sources),
             "legal_considerations": self.legal_considerations,
             "screening_status": self.screening_status,
             "summary": self.summary,
@@ -45,30 +90,41 @@ class IPScreeningResult:
         }
 
     def model_dump(self, *args, **kwargs) -> Dict[str, Any]:
-
+        """
+        Allows compatibility with Pydantic-style normalization
+        used by final_integration.py.
+        """
         return self.to_dict()
 
 
 class IPChecker:
     """
-    Preliminary IP and legal relevance screening.
+    Preliminary IP relevance screening.
 
-    This module uses the existing project RAG pipeline.
+    Responsibilities:
+        - Identify potentially relevant IP domains.
+        - Build IP-specific search queries.
+        - Retrieve evidence ONLY from the IP RAG domain.
+        - Provide concise IP-related considerations.
 
-    Current RAG knowledge base domains observed during testing:
+    IP domains currently considered:
+        - Patent
+        - Trademark
+        - Design
 
-        - regulatory
-        - abs
+    This module does NOT assess:
+        - Regulatory compliance
+        - TKDL / traditional knowledge
+        - ABS / biodiversity compliance
 
-    The system does NOT perform a patent registry search
-    or trademark registry search.
+    Those areas are handled independently by their respective
+    modules.
 
-    It identifies potentially relevant IP domains and retrieves
-    supporting legal evidence from the existing knowledge base.
+    The system also does not perform a comprehensive search of
+    official patent, trademark or design registries.
     """
 
     def __init__(self):
-
         self.rag = RAGEngine()
 
     # ============================================================
@@ -81,9 +137,21 @@ class IPChecker:
         top_k: int = 3,
     ) -> IPScreeningResult:
 
+        # --------------------------------------------------------
+        # Step 1: Identify potentially relevant IP domains
+        # --------------------------------------------------------
+
         relevant_ip_domains = self._identify_ip_domains(product)
 
+        # --------------------------------------------------------
+        # Step 2: Build IP-specific RAG search plan
+        # --------------------------------------------------------
+
         search_plan = self._build_search_plan(product)
+
+        # --------------------------------------------------------
+        # Step 3: Retrieve ONLY IP-domain evidence
+        # --------------------------------------------------------
 
         legal_evidence = self._retrieve_legal_evidence(
             product=product,
@@ -91,15 +159,27 @@ class IPChecker:
             top_k=top_k,
         )
 
+        # --------------------------------------------------------
+        # Step 4: Generate deterministic IP considerations
+        # --------------------------------------------------------
+
         legal_considerations = (
             self._generate_legal_considerations(product)
         )
+
+        # --------------------------------------------------------
+        # Step 5: Determine screening status
+        # --------------------------------------------------------
 
         screening_status = (
             self._determine_screening_status(
                 legal_evidence
             )
         )
+
+        # --------------------------------------------------------
+        # Step 6: Generate summary
+        # --------------------------------------------------------
 
         summary = self._generate_summary(
             product=product,
@@ -108,22 +188,21 @@ class IPChecker:
         )
 
         disclaimer = (
-            "This is an automated preliminary IP and legal "
-            "relevance screening result and not a legal opinion. "
-            "The current system retrieves relevant legal and "
-            "regulatory information from the project's RAG "
-            "knowledge base. It does not perform a comprehensive "
-            "search of patent, trademark, design or other official "
-            "IP registries. Professional legal review and official "
-            "database searches may be required."
+            "This is an automated preliminary IP relevance "
+            "screening result and not a legal opinion. The system "
+            "retrieves IP-related information from the project's "
+            "RAG knowledge base. It does not perform a "
+            "comprehensive search of official patent, trademark "
+            "or design registries. Professional legal review and "
+            "official database searches may be required."
         )
 
         return IPScreeningResult(
-
             product_name=product.product_name,
 
             relevant_ip_domains=relevant_ip_domains,
 
+            # Internal only.
             search_queries=[
                 {
                     "query_type": item["query_type"],
@@ -133,6 +212,8 @@ class IPChecker:
                 for item in search_plan
             ],
 
+            # Full evidence retained internally.
+            # to_dict() converts it to clean source citations.
             legal_evidence=legal_evidence,
 
             legal_considerations=legal_considerations,
@@ -158,72 +239,46 @@ class IPChecker:
         # --------------------------------------------------------
         # PATENT
         # --------------------------------------------------------
+        #
+        # Patent relevance is screened when there is an
+        # innovation / formulation feature that may warrant
+        # further patentability or prior-art review.
+        #
 
-        if product.innovation_description:
-
-            domains.append("patent")
-
-        elif (
-            product.classification
+        if (
+            product.innovation_description
+            or product.classification.lower()
             in [
                 "proprietary formulation",
                 "multi-ingredient formulation",
             ]
+            or product.ingredient_count > 1
         ):
-
-            domains.append("patent")
-
-        elif product.ingredient_count > 1:
-
             domains.append("patent")
 
         # --------------------------------------------------------
         # TRADEMARK
         # --------------------------------------------------------
+        #
+        # Commercial use is treated as an indicator that
+        # branding/trademark protection may be relevant.
+        #
 
         if product.commercial_use:
-
             domains.append("trademark")
 
         # --------------------------------------------------------
-        # TRADITIONAL KNOWLEDGE
+        # DESIGN
         # --------------------------------------------------------
+        #
+        # Do not automatically mark every product as design
+        # relevant.
+        #
+        # The current ProductContext does not contain a dedicated
+        # design indicator, so design is not added automatically.
+        #
 
-        if (
-            str(product.traditional_knowledge).lower()
-            == "yes"
-        ):
-
-            domains.append(
-                "traditional knowledge relevance"
-            )
-
-        # --------------------------------------------------------
-        # BIOLOGICAL RESOURCES
-        # --------------------------------------------------------
-
-        if (
-            str(product.uses_biological_resources).lower()
-            == "yes"
-        ):
-
-            domains.append(
-                "biological resource relevance"
-            )
-
-        # --------------------------------------------------------
-        # REMOVE DUPLICATES
-        # --------------------------------------------------------
-
-        unique_domains = []
-
-        for domain in domains:
-
-            if domain not in unique_domains:
-
-                unique_domains.append(domain)
-
-        return unique_domains
+        return domains
 
     # ============================================================
     # SEARCH PLAN
@@ -236,194 +291,72 @@ class IPChecker:
 
         search_plan = []
 
+        relevant_domains = self._identify_ip_domains(product)
+
         # --------------------------------------------------------
-        # PRODUCT / REGULATORY QUERY
+        # PATENT
         # --------------------------------------------------------
 
-        if product.product_type:
+        if "patent" in relevant_domains:
 
-            query = (
-                f"{product.product_type} "
-                f"{product.classification} "
-                f"{product.form} "
-                f"India legal requirements"
-            )
+            query_parts = [
+                "patent",
+                "Ayurvedic formulation",
+                "intellectual property",
+                "patentability",
+                "prior art",
+                "India",
+            ]
+
+            if product.innovation_description:
+                query_parts.insert(
+                    1,
+                    product.innovation_description
+                )
 
             search_plan.append(
                 {
-                    "query_type": "product_regulatory",
-                    "query": query,
-                    "rag_domain": "regulatory",
+                    "query_type": "patent",
+                    "query": " ".join(query_parts),
+                    "rag_domain": "ip",
                 }
             )
 
         # --------------------------------------------------------
-        # AYURVEDIC / PROPRIETARY FORMULATION
+        # TRADEMARK
         # --------------------------------------------------------
 
-        product_type = (
-            product.product_type.lower()
-            if product.product_type
-            else ""
-        )
-
-        classification = (
-            product.classification.lower()
-            if product.classification
-            else ""
-        )
-
-        if (
-            "ayurvedic" in product_type
-            or "proprietary" in classification
-        ):
-
-            query = (
-                "Ayurvedic patent or proprietary medicine "
-                "formulation ingredients India "
-                "legal requirements"
-            )
+        if "trademark" in relevant_domains:
 
             search_plan.append(
                 {
-                    "query_type": "ayurvedic_formulation",
-                    "query": query,
-                    "rag_domain": "regulatory",
+                    "query_type": "trademark",
+                    "query": (
+                        "trademark registration "
+                        "brand protection "
+                        "intellectual property "
+                        "India"
+                    ),
+                    "rag_domain": "ip",
                 }
             )
 
         # --------------------------------------------------------
-        # INGREDIENTS
+        # DESIGN
         # --------------------------------------------------------
 
-        if product.ingredients:
-
-            ingredients_text = " ".join(
-                product.ingredients
-            )
-
-            query = (
-                f"{ingredients_text} "
-                f"{product.product_type} "
-                f"India legal requirements"
-            )
+        if "design" in relevant_domains:
 
             search_plan.append(
                 {
-                    "query_type": "ingredients",
-                    "query": query,
-                    "rag_domain": "regulatory",
-                }
-            )
-
-        # --------------------------------------------------------
-        # BIOLOGICAL RESOURCES → ABS
-        # --------------------------------------------------------
-
-        if (
-            str(product.uses_biological_resources).lower()
-            == "yes"
-        ):
-
-            biological_resources = (
-                product.biological_resources
-                or product.ingredients
-            )
-
-            resources_text = " ".join(
-                biological_resources
-            )
-
-            query = (
-                f"{resources_text} "
-                "biological resources "
-                "India biodiversity law "
-                "intellectual property rights "
-                "approval requirements"
-            )
-
-            search_plan.append(
-                {
-                    "query_type": "biological_resources",
-                    "query": query,
-                    "rag_domain": "abs",
-                }
-            )
-
-        # --------------------------------------------------------
-        # TRADITIONAL KNOWLEDGE
-        # --------------------------------------------------------
-
-        if (
-            str(product.traditional_knowledge).lower()
-            == "yes"
-        ):
-
-            source = (
-                product.traditional_knowledge_source
-                or "traditional knowledge"
-            )
-
-            query = (
-                f"{source} "
-                "traditional knowledge "
-                "Ayurvedic formulation "
-                "intellectual property "
-                "India"
-            )
-
-            # We do not assume that a tkdl domain definitely
-            # exists because the diagnostic did not confirm it.
-            #
-            # The RAG search is performed without forcing
-            # domain=tkdl.
-
-            search_plan.append(
-                {
-                    "query_type": "traditional_knowledge",
-                    "query": query,
-                    "rag_domain": "auto",
-                }
-            )
-
-        # --------------------------------------------------------
-        # INNOVATION DESCRIPTION
-        # --------------------------------------------------------
-
-        if product.innovation_description:
-
-            query = (
-                f"{product.innovation_description} "
-                "intellectual property "
-                "legal considerations India"
-            )
-
-            search_plan.append(
-                {
-                    "query_type": "innovation",
-                    "query": query,
-                    "rag_domain": "auto",
-                }
-            )
-
-        # --------------------------------------------------------
-        # COMMERCIAL PRODUCT
-        # --------------------------------------------------------
-
-        if product.commercial_use:
-
-            query = (
-                f"{product.product_name} "
-                "commercial product "
-                "brand intellectual property "
-                "India"
-            )
-
-            search_plan.append(
-                {
-                    "query_type": "commercial_use",
-                    "query": query,
-                    "rag_domain": "auto",
+                    "query_type": "design",
+                    "query": (
+                        "industrial design protection "
+                        "design registration "
+                        "intellectual property "
+                        "India"
+                    ),
+                    "rag_domain": "ip",
                 }
             )
 
@@ -441,107 +374,63 @@ class IPChecker:
     ) -> List[Dict[str, Any]]:
 
         evidence = []
-
         seen_evidence = set()
 
-        context = self._build_rag_context(
-            product
-        )
+        context = self._build_rag_context(product)
 
         for search_item in search_plan:
 
             query = search_item["query"]
-
-            rag_domain = (
-                search_item["rag_domain"]
-            )
-
-            query_type = (
-                search_item["query_type"]
-            )
+            query_type = search_item["query_type"]
 
             try:
 
-                # ------------------------------------------------
-                # DOMAIN-SPECIFIC RETRIEVAL
-                # ------------------------------------------------
+                # IMPORTANT:
+                # IP retrieval is explicitly restricted to
+                # the IP RAG domain.
+                #
+                # This prevents Regulatory / ABS / TKDL
+                # evidence from appearing in IP results.
 
-                if rag_domain in [
-                    "regulatory",
-                    "abs",
-                ]:
-
-                    results = self.rag.search(
-
-                        query=query,
-
-                        context=context,
-
-                        filters={
-                            "domain": rag_domain
-                        },
-
-                        top_k=top_k,
-                    )
-
-                # ------------------------------------------------
-                # AUTOMATIC RETRIEVAL
-                # ------------------------------------------------
-
-                else:
-
-                    results = self.rag.search(
-
-                        query=query,
-
-                        context=context,
-
-                        top_k=top_k,
-                    )
-
-                # ------------------------------------------------
-                # EXTRACT RESULTS
-                # ------------------------------------------------
+                results = self.rag.search(
+                    query=query,
+                    context=context,
+                    filters={
+                        "domain": "ip"
+                    },
+                    top_k=top_k,
+                )
 
                 for result in results:
 
-                    parsed_result = (
-                        self._parse_rag_result(
-                            result=result,
-                            query_type=query_type,
-                            query=query,
-                        )
+                    parsed_result = self._parse_rag_result(
+                        result=result,
+                        query_type=query_type,
+                        query=query,
                     )
 
+                    # ------------------------------------------------
+                    # Deduplicate using source + section + page
+                    # ------------------------------------------------
+
                     evidence_key = (
-                        parsed_result["text"][:250]
+                        parsed_result.get("source"),
+                        parsed_result.get("section"),
+                        parsed_result.get("page"),
                     )
 
                     if evidence_key in seen_evidence:
-
                         continue
 
-                    seen_evidence.add(
-                        evidence_key
-                    )
+                    seen_evidence.add(evidence_key)
 
-                    evidence.append(
-                        parsed_result
-                    )
+                    evidence.append(parsed_result)
 
             except Exception as error:
 
-                print(
-                    "\nRAG retrieval warning:"
-                )
-
-                print(
-                    f"Query type: {query_type}"
-                )
-
-                print(
-                    f"Error: {error}"
-                )
+                print("\nIP RAG retrieval warning:")
+                print(f"Query type: {query_type}")
+                print(f"Error: {error}")
 
         return evidence
 
@@ -555,7 +444,6 @@ class IPChecker:
     ) -> Dict[str, Any]:
 
         return {
-
             "product_name":
                 product.product_name,
 
@@ -607,60 +495,128 @@ class IPChecker:
         query: str,
     ) -> Dict[str, Any]:
 
-        result_dict = self._convert_to_dict(
-            result
-        )
+        result_dict = self._convert_to_dict(result)
+
+        # --------------------------------------------------------
+        # Extract text
+        # --------------------------------------------------------
 
         text = self._extract_value(
             result_dict,
             [
                 "text",
                 "content",
-                "document",
                 "page_content",
                 "chunk",
+                "document",
             ],
         )
+
+        # --------------------------------------------------------
+        # Extract metadata
+        # --------------------------------------------------------
 
         metadata = self._extract_value(
             result_dict,
             [
-                "metadata"
+                "metadata",
             ],
         )
 
-        if not isinstance(
-            metadata,
-            dict
-        ):
-
+        if not isinstance(metadata, dict):
             metadata = {}
 
-        domain = self._extract_value(
-            metadata,
-            [
-                "domain",
-                "category",
-            ],
+        # --------------------------------------------------------
+        # Domain
+        # --------------------------------------------------------
+
+        domain = (
+            self._extract_value(
+                metadata,
+                [
+                    "domain",
+                    "category",
+                ],
+            )
+            or self._extract_value(
+                result_dict,
+                [
+                    "domain",
+                    "category",
+                ],
+            )
         )
 
-        source = self._extract_value(
-            metadata,
-            [
-                "source",
-                "file_name",
-                "document",
-                "filename",
-            ],
+        # --------------------------------------------------------
+        # Source / document
+        # --------------------------------------------------------
+
+        source = (
+            self._extract_value(
+                metadata,
+                [
+                    "source",
+                    "file_name",
+                    "document",
+                    "filename",
+                ],
+            )
+            or self._extract_value(
+                result_dict,
+                [
+                    "source",
+                    "file_name",
+                    "document",
+                    "filename",
+                ],
+            )
         )
 
-        page = self._extract_value(
-            metadata,
-            [
-                "page",
-                "page_number",
-            ],
+        # --------------------------------------------------------
+        # Section
+        # --------------------------------------------------------
+
+        section = (
+            self._extract_value(
+                metadata,
+                [
+                    "section",
+                    "section_name",
+                ],
+            )
+            or self._extract_value(
+                result_dict,
+                [
+                    "section",
+                    "section_name",
+                ],
+            )
         )
+
+        # --------------------------------------------------------
+        # Page
+        # --------------------------------------------------------
+
+        page = (
+            self._extract_value(
+                metadata,
+                [
+                    "page",
+                    "page_number",
+                ],
+            )
+            or self._extract_value(
+                result_dict,
+                [
+                    "page",
+                    "page_number",
+                ],
+            )
+        )
+
+        # --------------------------------------------------------
+        # Score
+        # --------------------------------------------------------
 
         score = self._extract_value(
             result_dict,
@@ -672,7 +628,7 @@ class IPChecker:
         )
 
         return {
-
+            # Internal fields
             "query_type":
                 query_type,
 
@@ -685,6 +641,9 @@ class IPChecker:
             "source":
                 source,
 
+            "section":
+                section,
+
             "page":
                 page,
 
@@ -692,7 +651,7 @@ class IPChecker:
                 score,
 
             "text":
-                str(text),
+                str(text or ""),
         }
 
     # ============================================================
@@ -701,54 +660,37 @@ class IPChecker:
 
     def _convert_to_dict(
         self,
-        result: Any,
+        value: Any,
     ) -> Dict[str, Any]:
 
-        if isinstance(
-            result,
-            dict
-        ):
+        if isinstance(value, dict):
+            return value
 
-            return result
-
-        if hasattr(
-            result,
-            "dict"
-        ):
-
+        if hasattr(value, "model_dump"):
             try:
-
-                return result.dict()
-
+                return value.model_dump()
             except Exception:
-
                 pass
 
-        if hasattr(
-            result,
-            "model_dump"
-        ):
-
+        if hasattr(value, "dict"):
             try:
-
-                return result.model_dump()
-
+                return value.dict()
             except Exception:
-
                 pass
 
-        if hasattr(
-            result,
-            "__dict__"
-        ):
+        if hasattr(value, "to_dict"):
+            try:
+                return value.to_dict()
+            except Exception:
+                pass
 
-            return result.__dict__
+        if hasattr(value, "__dict__"):
+            try:
+                return vars(value)
+            except Exception:
+                pass
 
-        return {
-
-            "text":
-                str(result)
-        }
+        return {}
 
     # ============================================================
     # EXTRACT VALUE
@@ -756,15 +698,19 @@ class IPChecker:
 
     def _extract_value(
         self,
-        data: Dict[str, Any],
-        possible_keys: List[str],
-    ) -> Optional[Any]:
+        data: Any,
+        keys: List[str],
+    ) -> Any:
 
-        for key in possible_keys:
+        if not isinstance(data, dict):
+            return None
 
-            if key in data:
+        for key in keys:
 
-                return data[key]
+            value = data.get(key)
+
+            if value is not None:
+                return value
 
         return None
 
@@ -786,11 +732,10 @@ class IPChecker:
         if product.innovation_description:
 
             considerations.append(
-
                 "The product includes an innovation or "
-                "formulation description. Patent relevance "
-                "may require further review of novelty and "
-                "existing prior art."
+                "formulation description. Patent relevance may "
+                "require further review of novelty and existing "
+                "prior art."
             )
 
         # --------------------------------------------------------
@@ -803,82 +748,45 @@ class IPChecker:
         ):
 
             considerations.append(
-
                 "The product is described as a proprietary "
-                "formulation. The formulation and its claims "
-                "may require additional IP and regulatory review."
+                "formulation. The formulation may warrant "
+                "additional patent and prior-art review."
             )
 
         # --------------------------------------------------------
-        # COMMERCIAL USE
+        # COMMERCIAL USE / TRADEMARK
         # --------------------------------------------------------
 
         if product.commercial_use:
 
             considerations.append(
-
                 "The product is intended for commercial use. "
-                "Trademark and branding considerations may be "
+                "Trademark and branding protection may be "
                 "relevant."
             )
 
         # --------------------------------------------------------
-        # TRADITIONAL KNOWLEDGE
-        # --------------------------------------------------------
-
-        if (
-            str(product.traditional_knowledge).lower()
-            == "yes"
-        ):
-
-            considerations.append(
-
-                "The product involves traditional knowledge. "
-                "Traditional knowledge and prior-art "
-                "considerations may be relevant during "
-                "IP evaluation."
-            )
-
-        # --------------------------------------------------------
-        # BIOLOGICAL RESOURCES
-        # --------------------------------------------------------
-
-        if (
-            str(product.uses_biological_resources).lower()
-            == "yes"
-        ):
-
-            considerations.append(
-
-                "The product uses biological resources. "
-                "Access and benefit-sharing or biodiversity "
-                "law considerations may require review."
-            )
-
-        # --------------------------------------------------------
-        # INGREDIENTS
+        # MULTIPLE INGREDIENTS
         # --------------------------------------------------------
 
         if product.ingredient_count > 1:
 
             considerations.append(
-
                 "The product contains multiple ingredients. "
-                "The combination and formulation may require "
-                "additional prior-art and formulation review."
+                "The combination and formulation may warrant "
+                "additional patentability and prior-art review."
             )
 
         # --------------------------------------------------------
-        # DEFAULT
+        # FALLBACK
         # --------------------------------------------------------
 
         if not considerations:
 
             considerations.append(
-
-                "No specific IP or legal relevance indicators "
-                "were identified from the currently available "
-                "product information."
+                "No specific patent, trademark or design "
+                "relevance indicators were identified from the "
+                "currently available product information."
             )
 
         return considerations
@@ -895,13 +803,14 @@ class IPChecker:
         if len(legal_evidence) == 0:
 
             return (
-                "Screening completed, but no legal evidence "
-                "was retrieved from the current RAG knowledge base."
+                "IP screening completed, but no supporting "
+                "IP evidence was retrieved from the current "
+                "IP RAG knowledge base."
             )
 
         return (
-            "Preliminary IP and legal relevance screening "
-            "completed with RAG-supported legal evidence."
+            "Preliminary IP relevance screening completed "
+            "with RAG-supported IP evidence."
         )
 
     # ============================================================
@@ -921,54 +830,24 @@ class IPChecker:
             else "no specific IP domains"
         )
 
-        evidence_count = len(
-            legal_evidence
-        )
+        evidence_count = len(legal_evidence)
 
         if evidence_count == 0:
 
             return (
-
-                f"Preliminary screening for "
-                f"'{product.product_name}' identified "
-                f"potential relevance to: {domain_text}. "
-                f"No supporting legal evidence was retrieved "
-                f"from the current RAG knowledge base."
+                f"Preliminary IP screening for "
+                f"'{product.product_name}' identified potential "
+                f"relevance to: {domain_text}. No supporting IP "
+                f"evidence was retrieved from the current IP "
+                f"knowledge base."
             )
-
-        evidence_domains = []
-
-        for item in legal_evidence:
-
-            domain = item.get(
-                "domain"
-            )
-
-            if (
-                domain
-                and domain not in evidence_domains
-            ):
-
-                evidence_domains.append(
-                    str(domain)
-                )
-
-        evidence_domain_text = (
-            ", ".join(evidence_domains)
-            if evidence_domains
-            else "the current legal knowledge base"
-        )
 
         return (
-
-            f"Preliminary screening for "
-            f"'{product.product_name}' identified "
-            f"potential relevance to: {domain_text}. "
-            f"The existing RAG system retrieved "
-            f"{evidence_count} supporting legal evidence "
-            f"item(s), primarily from: "
-            f"{evidence_domain_text}. "
-            f"This evidence is intended to support preliminary "
-            f"legal relevance analysis and does not constitute "
-            f"a comprehensive IP registry search."
+            f"Preliminary IP screening for "
+            f"'{product.product_name}' identified potential "
+            f"relevance to: {domain_text}. The IP RAG system "
+            f"retrieved {evidence_count} supporting IP evidence "
+            f"item(s). This screening is intended to identify "
+            f"potential IP relevance and does not constitute a "
+            f"comprehensive official IP registry search."
         )

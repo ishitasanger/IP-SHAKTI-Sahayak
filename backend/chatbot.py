@@ -75,17 +75,30 @@ class IPShaktiChatbot:
             top_k=5
         )
 
-        evidence = []
+        retrieved_evidence = []
+        sources = []
 
         for result in results:
-            evidence.append({
+
+            # Full evidence for the LLM
+            retrieved_evidence.append({
                 "document": result.document,
                 "section": result.section,
                 "page": result.page,
                 "source_url": result.metadata.get("source_url"),
-                "text": result.text,
-                "score": result.score
+                "text": result.text
             })
+
+            # Clean source information for the frontend
+            source = result.document
+
+            if result.section and result.section != "Not specified":
+                source += f" — {result.section}"
+
+            if result.page:
+                source += f", Page {result.page}"
+
+            sources.append(source)
 
         # --------------------------------------------------
         # Generate grounded answer using LLM
@@ -97,10 +110,10 @@ class IPShaktiChatbot:
             legal_report=legal_report,
             roadmap=roadmap,
             chat_history=chat_history,
-            retrieved_evidence=evidence
+            retrieved_evidence=retrieved_evidence
         )
 
         return {
             "answer": answer,
-            "sources": evidence
+            "sources": sources
         }
